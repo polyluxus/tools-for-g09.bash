@@ -27,10 +27,12 @@ findEnergy ()
         functional="${BASH_REMATCH[1]}"
         energy="${BASH_REMATCH[2]}"
         cycles="${BASH_REMATCH[3]}"
+
+        # Print the line, format it for table like structure
+        printf "%-25s %-15s = %20s ( %6s )\n" ${1%.*} $functional $energy $cycles
+    else
+        printf "%-25s No energy statement found.\n" "${1%.*}"
     fi
-  
-    # Print the line, format it for table like structure
-    printf "%-25s %-15s = %20s ( %6s )\n" ${1%.*} $functional $energy $cycles
 }
 
 getOnly ()
