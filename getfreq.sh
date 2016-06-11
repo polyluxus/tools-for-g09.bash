@@ -190,22 +190,22 @@ printEntropy ()
      local index
      printf "%-15s : " "Contrib."
      for (( index=0; index < ${#contributionNames[@]}; index++ )); do
-         printf "%-10s " ${contributionNames[$index]}
+         printf "%-10s " "${contributionNames[$index]}"
      done 
      printf "%-15s\n" "Unit"
      printf "%-11s %4s: " "thermal en." "(U)"
      for (( index=0; index < ${#thermalE[@]}; index++ )); do
-         printf "%+10.3f " ${thermalE[$index]}
+         printf "%+10.3f " "${thermalE[$index]}"
      done 
      printf "%-15s\n" "kcal/mol"
      printf "%-11s %4s: " "heat cap." "(Cv)"
      for (( index=0; index < ${#heatCapacity[@]}; index++ )); do
-         printf "%+10.3f " ${heatCapacity[$index]}
+         printf "%+10.3f " "${heatCapacity[$index]}"
      done 
      printf "%-15s\n" "cal/(mol K)"
      printf "%-11s %4s: " "entropy" "(S)"
      for (( index=0; index < ${#entropy[@]}; index++ )); do
-         printf "%+10.3f " ${entropy[$index]}
+         printf "%+10.3f " "${entropy[$index]}"
      done 
      printf "%-15s\n" "cal/(mol K)"
 
