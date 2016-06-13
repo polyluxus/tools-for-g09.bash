@@ -1,6 +1,7 @@
 #!/bin/bash
 # Script can be used to parse one (or more) frequency calculation(s)
 # of the quantum chemical software suite Gaussian09
+# See also http://codereview.stackexchange.com/q/131666/92423
 
 # Intitialise scriptoptions
 errCount=0
@@ -31,6 +32,50 @@ warn ()
 {
     echo "WARNING: " "$@"
 } 
+
+# Usage and help
+usage ()
+{
+    message "Usage: $0 [options] filenames(s)"
+    message "Options may be -v -V{0,1,2,3} -c"
+    message "Use -h to display a longer help message."
+    exit 0
+}
+
+helpme ()
+{
+cat << EOF
+This script is part of the tools-for-g09 bundle.
+  https://github.com/polyluxus/tools-for-g09
+
+
+This tool creates a summary for a single (or more) frequency calculation(s). It will, 
+however, not fail if it is not one. In principle it looks for a defined 
+set of keywords and writes them to the screen.
+
+Usage  : $0 [options] filenames(s)
+
+Options:
+         -v 
+            incrementally increase verbosity 
+         -V [ARG]
+            set level of verbosity directly, ARG may be
+            0: (default) display a single line of most important values
+            1: display a short table of most important values
+            2: like 1, also repeats the route section
+            3: like 2, also includes the decomposition of the entropy, thermal
+               energy and heat capacity into electronic, translational, 
+               rotational, and vibrational contributions
+         -c
+            like -V0 but the values are comma separated
+         -u 
+            display short usage message
+         -h 
+            display this help
+
+See also http://codereview.stackexchange.com/q/131666/92423
+EOF
+}
 
 # Parse the commands that have been passed to Gaussian09
 getRouteSec ()
@@ -72,7 +117,7 @@ testRouteSec ()
 printRouteSec ()
 {
     message "Found route section:"
-    fold -w80 -c -s < <(echo "$routeSection")
+    fold -w80 -c -s <<< "$routeSection"
     echo "----"
 }
 
@@ -187,25 +232,25 @@ getEntropy ()
 # If requested print the transposed table of entropies, heat capacities and the break up of the int. energy.
 printEntropy ()
 {
-     local index
+     local name
      printf "%-15s : " "Contrib."
-     for (( index=0; index < ${#contributionNames[@]}; index++ )); do
-         printf "%-10s " "${contributionNames[$index]}"
+     for name in "${contributionNames[@]}"; do
+         printf "%-10s " "$name"
      done 
      printf "%-15s\n" "Unit"
      printf "%-11s %4s: " "thermal en." "(U)"
-     for (( index=0; index < ${#thermalE[@]}; index++ )); do
-         printf "%+10.3f " "${thermalE[$index]}"
+     for name in "${thermalE[@]}"; do
+         printf "%+10.3f " "$name"
      done 
      printf "%-15s\n" "kcal/mol"
      printf "%-11s %4s: " "heat cap." "(Cv)"
-     for (( index=0; index < ${#heatCapacity[@]}; index++ )); do
-         printf "%+10.3f " "${heatCapacity[$index]}"
+     for name in "${heatCapacity[@]}"; do
+         printf "%+10.3f " "$name"
      done 
      printf "%-15s\n" "cal/(mol K)"
      printf "%-11s %4s: " "entropy" "(S)"
-     for (( index=0; index < ${#entropy[@]}; index++ )); do
-         printf "%+10.3f " "${entropy[$index]}"
+     for name in "${entropy[@]}"; do
+         printf "%+10.3f " "$name"
      done 
      printf "%-15s\n" "cal/(mol K)"
 
@@ -253,7 +298,7 @@ printAllEnergiesInline ()
     local printHeader printValues
 
     for (( index=0; index < ${#header[@]}; index++ )); do
-        if [ ${#values[$index]} -lt ${#header[$index]} ]; then
+        if (( ${#values[$index]} < ${#header[$index]} )); then
             printf -v printHeader "%s%-*s%s" "$printHeader" ${#header[$index]} "${header[$index]}" "$fs"
             printf -v printValues "%s%*s%s"  "$printValues" ${#header[$index]} "${values[$index]}" "$fs"
         else                                                                  
@@ -321,6 +366,15 @@ analyseLog ()
 }
 
 # Start main script
+# If the used locale is not English, the formatting of floating numbers of the 
+# printf commands will produce an error
+if [[ ! "$LANG" == "en_US.utf8" ]]; then 
+    warn "Formatting might not properly work for '$LANG'."
+    warn "Setting locale for this script."
+    set -x
+        export LC_NUMERIC="en_US.utf8"
+    set +x
+fi
 
 # Evaluate options
 while getopts :vcV:hu options ; do
@@ -333,10 +387,8 @@ while getopts :vcV:hu options ; do
            else
                fatal "Invalid argument: $OPTARG"
            fi ;;
-        # The following will be substituted by a proper help
-        h) message "Usage: $0 [options] filenames(s)"; exit 0 ;;
-        # The following will be substituted by a proper usage guidance
-        u) message "Usage: $0 [options] filenames(s)"; exit 0 ;;
+        h) helpme ;;
+        u) usage ;;
        \?) warn "Invalid option: -$OPTARG." ;;
         :) fatal "Option -$OPTARG requires an argument." ;;
     esac
@@ -345,7 +397,7 @@ shift $((OPTIND-1))
 
 # Check if filename is specified
 if [[ $# == 0 ]]; then 
-    fatal "No output file specified. Nothing to do."
+    fatal "No output file specified. Nothing to do. Try $0 -h for more information."
 fi
 
 # Assume all other commandline arguments are filenames
@@ -362,7 +414,7 @@ while [ ! -z "$1" ]; do
 done
 
 # Issue an error if files have not been found.
-if [ "$errCount" -gt 0 ]; then
+if (( "$errCount" > 0 )); then
     fatal "There have been one or more errors reading the specified files."
 fi
 
