@@ -75,6 +75,7 @@ Options:
 
 See also http://codereview.stackexchange.com/q/131666/92423
 EOF
+exit 0
 }
 
 # Parse the commands that have been passed to Gaussian09
