@@ -40,14 +40,26 @@ To Do: - Includeoptions for more file suffixes
        - include a switch to be able to search from the start
        - etc.
 
-
+---
 
 getfreq.sh
 
-This tool creates a summary for a single frequency calculation. It will, 
+This tool creates a summary for a single (or more) frequency calculation(s). It will, 
 however, not fail if it is not one. In principle it looks for a defined 
-set of keywords and writes them to stout.
+set of keywords and writes them to the screen.
+The level of verbosity can be entered directly with -V(0,1,2,3) or increased step-
+wise with -v. Comma seperated values are available with -c.
+See also http://codereview.stackexchange.com/q/131666/92423
 
-To Do: clean up code... review... etc.
+To Do: - write proper usage and help functions (done)
+       - include customised outputline (specify which quantities are printed)
+       - review of the code and extended testing (review implemented) 
+       - fix bug when locale is not set to English (temprorarily set to en_US.utf8 done) 
+       - script does not properly work for mp2 (..) calculations, as it does not 
+         fetch the appropriate corrections
+       - etc.
 
+---
+
+more tools in preparation
 
