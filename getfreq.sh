@@ -61,11 +61,12 @@ Options:
          -V [ARG]
             set level of verbosity directly, ARG may be
             0: (default) display a single line of most important values
-            1: display a short table of most important values
-            2: like 1, also repeats the route section
+            1: display a short table of most important values (equal to -v)
+            2: like 1, also repeats the route section (equal to -vv)
             3: like 2, also includes the decomposition of the entropy, thermal
                energy and heat capacity into electronic, translational, 
-               rotational, and vibrational contributions
+               rotational, and vibrational contributions (equal to -vvv)
+            If this option is found, -v will be ignored.
          -c
             like -V0 but the values are comma separated
          -u 
@@ -280,7 +281,7 @@ getThermochemistry ()
 
 getAllEnergies ()
 {
-    getElecEnergy || fatal "Unable to find electronic energy."
+    getElecEnergy || warn "Unable to find electronic energy."
     (( isFreqCalc == 1 )) && getThermochemistry
     (( isFreqCalc == 1 )) && getEntropy
 }
@@ -288,6 +289,8 @@ getAllEnergies ()
 # If only one line of output is requested for easier importing
 printAllEnergiesInline ()
 {
+    [[ -z $functional ]] && functional="na"
+    [[ -z $electronicEnergy ]] && electronicEnergy="na"
     local fs="$1"
     local index
     local header=("Method" "T (K)" "P (atm)" "E(SCF) (au/p)" \
@@ -316,10 +319,15 @@ printAllEnergiesInline ()
 # Print a table (e.g. for archiving)
 printAllEnergiesTable ()
 {
+     [[ -z $functional ]] && functional="(not available)"
      printf "%-25s %8s: %-20s %-20s\n"    "calculation details"   ""        "$functional"          "$filename" 
      printf "%-25s %8s: %20.3f %-20s\n"   "temperature"           "(T)"     "$temperature"         "K"
      printf "%-25s %8s: %20.5f %-20s\n"   "pressure"              "(p)"     "$pressure"            "atm"
-     printf "%-25s %8s: %+20.10f %-20s\n" "electr. en."           "(E)"     "$electronicEnergy"    "hartree"
+     if [[ -z $electronicEnergy ]]; then
+         printf "%-25s %8s: %-20s %-20s\n" "electr. en."          "(E)"     "(not available)"      ""
+     else
+         printf "%-25s %8s: %+20.10f %-20s\n" "electr. en."       "(E)"     "$electronicEnergy"    "hartree"
+     fi
      printf "%-25s %8s: %+20.6f %-20s\n"  "zero-point corr."      "(ZPE)"   "$zeroPointEnergy"     "hartree/particle"
      printf "%-25s %8s: %+20.6f %-20s\n"  "thermal corr."         "(U)"     "$thermalCorrEnergy"   "hartree/particle"
      printf "%-25s %8s: %+20.6f %-20s\n"  "ther. corr. enthalpy"  "(H)"     "$thermalCorrEnthalpy" "hartree/particle"
@@ -360,6 +368,7 @@ analyseLog ()
         unset isFreqCalc isOptimisation
     else
         (( isOptimisation == 1 )) && local append=" (last value)"
+        (( printlevel > 1 )) && printRouteSec
         message "$filename"
         message "Electronic energy$append: $electronicEnergy hartree"
         unset isOptimisation electronicEnergy routeSection
@@ -411,7 +420,7 @@ while [ ! -z "$1" ]; do
         analyseLog "$filename"
     fi
     shift
-    [[ ! -z "$1" && $printlevel -gt 0 ]] && echo "===="
+    [[ ! -z "$1" && $printlevel -gt 0 ]] && echo "==== Next file ===="
 done
 
 # Issue an error if files have not been found.
