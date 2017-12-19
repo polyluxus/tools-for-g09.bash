@@ -2,6 +2,14 @@
 # Script can be used to parse one (or more) frequency calculation(s)
 # of the quantum chemical software suite Gaussian09
 # See also http://codereview.stackexchange.com/q/131666/92423
+# 
+# This was last updated with 
+version="0.1.2"
+versiondate="2017-12-19"
+# of tools-for-g09.bash
+
+scriptname=${0##*\/} # Remove trailing path
+scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
 # Intitialise scriptoptions
 errCount=0
@@ -48,12 +56,11 @@ cat << EOF
 This script is part of the tools-for-g09 bundle.
   https://github.com/polyluxus/tools-for-g09
 
-
 This tool creates a summary for a single (or more) frequency calculation(s). It will, 
 however, not fail if it is not one. In principle it looks for a defined 
 set of keywords and writes them to the screen.
 
-Usage  : $0 [options] filenames(s)
+Usage  : $scriptname [options] filenames(s)
 
 Options:
          -v 
@@ -75,6 +82,7 @@ Options:
             display this help
 
 See also http://codereview.stackexchange.com/q/131666/92423
+(Martin; $version; $versiondate)
 EOF
 exit 0
 }
@@ -89,12 +97,13 @@ getRouteSec ()
     local line appendline 
     local addline=0
     while read -r line; do
-        if [[ $line =~ ^[[:space:]]*#[nNpPtT]?[[:space:]] || "$addline" == "1" ]]; then
+        local pattern="^[[:space:]]*#[nNpPtT]?[[:space:]]"
+        if [[ $line =~ $pattern || "$addline" == "1" ]]; then
             [[ $line =~ ^[[:space:]]*[-]+[[:space:]]*$ ]] && break
             appendline="$appendline$line"
             addline=1
         fi
-    done < "$filename" 
+    done < "$1" 
 
     routeSection="$appendline"
 }
@@ -103,13 +112,15 @@ getRouteSec ()
 testRouteSec ()
 {
     local testRouteSection="$1"
-    if [[ $testRouteSection =~ ([oO][pP][tT][^[:space:]]*)([[:space:]]|$) ]]; then
+    local patternOpt="([oO][pP][tT][^[:space:]]*)([[:space:]]|$)"
+    if [[ $testRouteSection =~ $patternOpt ]]; then
         warn "This appears to be an optimisation."
         warn "Found '${BASH_REMATCH[1]}' in the route section."
         warn "The script is not intended for creating a summary of an optimisation."
         isOptimisation=1
     fi
-    if [[ $testRouteSection =~ ([Ff][Rr][Ee][Qq][^[:space:]]*)([[:space:]]|$) ]]; then
+    local patternFreq="([Ff][Rr][Ee][Qq][^[:space:]]*)([[:space:]]|$)"
+    if [[ $testRouteSection =~ $patternFreq ]]; then
         message "Found '${BASH_REMATCH[1]}' in the route section."
         isFreqCalc=1
     fi
@@ -128,7 +139,7 @@ getElecEnergy ()
     # The last value is the only of concern. Since the script is intended for single
     # point calculations, it is expected that the energy is printed early in the file.
     # It will not fail if it is an optimisation (warning printed earlier).
-    local -r readWholeLine=$(grep -e 'SCF Done' "$filename" | tail -n 1)
+    local -r readWholeLine=$(grep -e 'SCF Done' "$1" | tail -n 1)
     # Gaussian output has following format, trap important information:
     # Method, electronic Energy
     # Example taken from BP86/cc-pVTZ for water (H2O): 
@@ -211,24 +222,27 @@ findThermalCorrGibbs ()
 # but they come as a freebie.
 getEntropy ()
 {
-     local index=0
+     local index=0 line
+     local pattern numpattern
      while read -r line; do
-         if [[ $line =~ ^[[:space:]]*E[[:space:]]{1}\(Thermal\)[[:space:]]+CV[[:space:]]+S[[:space:]]*$ ]]; then
+         pattern="^[[:space:]]*E[[:space:]]{1}\(Thermal\)[[:space:]]+CV[[:space:]]+S[[:space:]]*$"
+         if [[ "$line" =~ $pattern ]]; then
              continue
          fi
-         if [[ "$line" =~ ^[[:space:]]*KCal/Mol[[:space:]]+Cal/Mol-Kelvin[[:space:]]+Cal/Mol-Kelvin[[:space:]]*$ ]]; then
+         pattern="^[[:space:]]*KCal/Mol[[:space:]]+Cal/Mol-Kelvin[[:space:]]+Cal/Mol-Kelvin[[:space:]]*$"
+         if [[ "$line" =~ $pattern ]]; then
              continue
          fi
          numpattern="[-]?[0-9]+\.[0-9]+"
          pattern="^[[:space:]]*([a-zA-Z]+)[[:space:]]+($numpattern)[[:space:]]+($numpattern)[[:space:]]+($numpattern)[[:space:]]*+$"
-         if [[ $line =~ $pattern ]]; then
+         if [[ "$line" =~ $pattern ]]; then
              contributionNames[$index]=${BASH_REMATCH[1]:0:3}
              thermalE[$index]=${BASH_REMATCH[2]}
              heatCapacity[$index]=${BASH_REMATCH[3]}
              entropy[$index]=${BASH_REMATCH[4]}
              (( index++ ))
          fi
-     done < <(grep -A6 -e 'E (Thermal)[[:space:]]\+CV[[:space:]]\+S' "$filename")
+     done < <(grep -A6 -e 'E (Thermal)[[:space:]]\+CV[[:space:]]\+S' "$1")
 }
 
 # If requested print the transposed table of entropies, heat capacities and the break up of the int. energy.
@@ -264,26 +278,27 @@ getThermochemistryLines ()
     grep -e 'Temperature.*Pressure' -e 'Zero-point correction' \
          -e 'Thermal correction to Energy' -e 'Thermal correction to Enthalpy' \
          -e 'Thermal correction to Gibbs Free Energy' \
-         "$filename"
+         "$1"
 }
 
 # Parse the thermochemistry output
 getThermochemistry ()
 {
+    local line
     while read -r line; do
         findTempPress           "$line"  && continue
         findZeroPointEnergy     "$line"  && continue
         findThermalCorrEnergy   "$line"  && continue
         findThermalCorrEnthalpy "$line"  && continue
         findThermalCorrGibbs    "$line"  && continue
-    done < <(getThermochemistryLines "$filename")
+    done < <(getThermochemistryLines "$1")
 }
 
 getAllEnergies ()
 {
-    getElecEnergy || warn "Unable to find electronic energy."
-    (( isFreqCalc == 1 )) && getThermochemistry
-    (( isFreqCalc == 1 )) && getEntropy
+    getElecEnergy "$1" || warn "Unable to find electronic energy."
+    (( isFreqCalc == 1 )) && getThermochemistry "$1"
+    (( isFreqCalc == 1 )) && getEntropy "$1"
 }
 
 # If only one line of output is requested for easier importing
@@ -360,9 +375,9 @@ printSummary ()
 
 analyseLog ()
 {
-    getRouteSec 
+    getRouteSec "$1" 
     testRouteSec "$routeSection"
-    getAllEnergies
+    getAllEnergies "$1"
     if [[ $isFreqCalc == "1" ]]; then
         printSummary
         unset isFreqCalc isOptimisation
@@ -407,13 +422,13 @@ shift $((OPTIND-1))
 
 # Check if filename is specified
 if [[ $# == 0 ]]; then 
-    fatal "No output file specified. Nothing to do. Try $0 -h for more information."
+    fatal "No output file specified. Nothing to do. Try $scriptname -h for more information."
 fi
 
 # Assume all other commandline arguments are filenames
-while [ ! -z "$1" ]; do
+while [[ ! -z "$1" ]]; do
     filename="$1"
-    if [ ! -e "$filename" ]; then 
+    if [[ ! -e "$filename" ]]; then 
         warn "Specified logfile '$filename' does not exist. Continue."
         ((errCount++))
     else
