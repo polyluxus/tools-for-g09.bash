@@ -5,6 +5,11 @@
 # Related Review of original code:
 # http://codereview.stackexchange.com/q/129854/92423
 # Thanks to janos and 200_success
+# 
+# This was last updated with 
+version="0.1.2"
+versiondate="2017-12-19"
+# of tools-for-g09.bash
 
 findEnergy ()
 {
@@ -21,7 +26,7 @@ findEnergy ()
     # Method, Energy, Cycles
     # Example taken from BP86/cc-pVTZ for water (H2O): 
     #  SCF Done:  E(RB-P86) =  -76.4006006969     A.U. after   10 cycles
-    pattern="(E\(.+\)) = (.+) A\.U\.[^0-9]+([0-9]+) cycles"
+    pattern="(E\(.+\)) = (.+) [aA]\.[uU]\.[^0-9]+([0-9]+) cycles"
     if [[ $readWholeLine =~ $pattern ]]
     then 
         functional="${BASH_REMATCH[1]}"
