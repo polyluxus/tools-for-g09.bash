@@ -288,12 +288,14 @@ Usages:
     Possible values for option (exclusive): -3, -2, -c.
     Input and output are optional arguments, if not present, they will be 
     prompted for or guessed.
+    (The option 'formcheck' is a synonym for 'formchk'.)
     (No sanity check of the file will be performed.)
 
   $scriptname unfchk [<input>] [<output>]
     Calls the G09 utility unfchk (see manual).
     Input and output are optional arguments, if not present, they will be
     prompted for or guessed.
+    (The option 'unformcheck' is a synonym for 'unfchk'.)
     (No sanity check of the file will be performed.)
 
   $scriptname cubegen [parameters]
@@ -336,9 +338,11 @@ case "$1" in
               "") message "Use '$scriptname help' to get a brief overview."
                   fatal   "Please specify an input file or command." ;;
      
-       "formchk") shift; format_checkpoint "$@" ;;
+       "formchk" | "formcheck" ) 
+                  shift; format_checkpoint "$@" ;;
      
-        "unfchk") shift; unformat_checkpoint "$@" ;;
+        "unfchk" | "unformcheck" ) 
+                  shift; unformat_checkpoint "$@" ;;
      
        "cubegen") shift; generate_cubefiles "$@" ;;
      

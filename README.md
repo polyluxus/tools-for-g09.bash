@@ -98,14 +98,16 @@ the Gaussian environment and perform a calculation.
 Calls the G09 utility `formchk` with the default option `-3` (see manual).
 Possible values for option (exclusive): `-3`, `-2`, `-c`.
 Input and output are optional arguments, if not present, they will be 
-prompted for or guessed.
+prompted for or guessed.  
+(The option `formcheck` is a synonym for `formchk`.)
 
 ```
   g09.wrapper unfchk [<input>] [<output>]
 ```
 Calls the G09 utility unfchk (see manual).
 Input and output are optional arguments, if not present, they will be
-prompted for or guessed.
+prompted for or guessed.  
+(The option `unformcheck` is a synonym for `unfchk`.)
 
 ```
   g09.wrapper cubegen [parameters]
@@ -136,6 +138,13 @@ To Do:
  - Implement option to set `GAUSS_MEMDEF` for the utilities. Currently 
  if memory is scarce you need to use raw or bash mode.
 
+### g09.genwfx.sh
+
+This script reads an inputfile and produces a new inputfile to perform a property run.
+In such a run no calculation will be performed, therefore a checkpointfile is
+strictly neccessary. It also is possible to run these calculations interactively
+with the wrapper script, as they should only take a few minutes at most.
+
 ### water.sample.tgz
 
 Contains a collection of Gaussian 09 in- and outputs for demonstration
@@ -145,4 +154,4 @@ and testing.
 
 more tools in preparation (?)
 
-(Martin; 0.1.2; 2017-12-19.)
+(Martin; 0.1.3; 2018-01-09.)
