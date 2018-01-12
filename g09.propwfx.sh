@@ -3,8 +3,8 @@
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
-version="0.1.3"
-versiondate="2018-01-09"
+version="0.1.4"
+versiondate="2018-01-12"
 
 # A script to take an input file and write a new inputfile to 
 # obtain a wfx file.
@@ -53,7 +53,7 @@ helpme ()
     local line
     local pattern="^[[:space:]]*#hlp[[:space:]]*(.*$)"
     while read -r line; do
-      [[ $line =~ $pattern ]] && echo "${BASH_REMATCH[1]}"
+      [[ $line =~ $pattern ]] && eval "echo \"${BASH_REMATCH[1]}\""
     done < <(grep "#hlp" "$0")
     exit 0
 }
@@ -71,6 +71,18 @@ getCheckpointfile ()
     fi
 }
 
+removeComment ()
+{
+    local variableName="$1" variableContent="$2"
+    local pattern="^[[:space:]]*([^!]+)[!]*[[:space:]]*(.*)$"
+    if [[ $variableContent =~ $pattern ]] ; then
+      printf -v "$variableName" "%s" "${BASH_REMATCH[1]}"
+      [[ ! -z ${BASH_REMATCH[2]} ]] && message "Removed comment: ${BASH_REMATCH[2]}"
+    else
+      return 1 # Return false if blank line
+    fi
+}
+
 parseInputfile ()
 {
     # The route section contains one or more lines.
@@ -78,45 +90,31 @@ parseInputfile ()
     # NPT (case insensitive). The route section is terminated by a blank line.
     # It is immediately followed by the title section, which can also consist of 
     # multiple lines made up of (almost) anything. It is also terminated by a blank line.
-    # (Extracting the title is not necessary for writing the input file for wfx extraction,
-    # but we can do it anyway as it may become handy in other instances.)
-    local line appendline pattern
-    local storeRoute=0 storeTitle=0 addline=0
+    # Following that is the charge and multiplicity.
+    # (Extracting the title, charge and multiplicity is not necessary for writing 
+    # the input file for wfx extraction, so it is skipped here.
+    # It may be necessary in other instances, see g09.propnbo6.)
+    local line appendline 
+    # The hash marks the beginning of the route
+    local routeStartPattern="^[[:space:]]*#[nNpPtT]?[[:space:]]"
+    local storeRoute=0 
     while read -r line; do
       # If we found the checkpointfile, we can skip out of the loop
       if [[ -z $checkpointfile ]] ; then
         getCheckpointfile "$line" && continue
       fi
-      # The hash marks the beginning of the route
-      pattern="^[[:space:]]*#[nNpPtT]?[[:space:]]"
-      # Encountered first, append the line
-      if [[ $line =~ $pattern || "$addline" == "1" ]]; then
-        if [[ $line =~ ^[[:space:]]*[!]+[[:space:]]*(.*$) ]]; then
-          # Comments are inticated with '!', skip this line
-          message "Removed comment: ${BASH_REMATCH[1]}"
-          continue
-        elif [[ $line =~ ^[[:space:]]*$ && $storeRoute == 1 ]]; then
-          # When encountering a blank line, exit reading after appending
-          # Enter reading the title (might not be present if read from checkpoint)
-          storeRoute=0
-          storeTitle=1
+      if (( storeRoute == 0 )) ; then
+        if [[ $line =~ $routeStartPattern ]] ; then
+          storeRoute=1
+          removeComment appendline "$line"
           routeSection="$appendline"
-          unset appendline
           continue
-        elif [[ $line =~ ^[[:space:]]*$ && $storeTitle == 1 ]]; then
-          storeTitle=0 addline=0
-          titleSection="$appendline"
-          # If title is found the rest of the file can be ignored
+        fi
+      fi
+      if (( storeRoute == 1 )) ; then
+        if [[ $line =~ ^[[:space:]]*$ ]]; then
+          storeRoute=2
           break
-        else
-          pattern="^([^!]+)[!]*[[:space:]]*(.*$)"
-          if [[ $line =~ $pattern ]] ; then
-            [[ ! -z ${BASH_REMATCH[2]} ]] && message "Removed comment: ${BASH_REMATCH[2]}"
-            line="${BASH_REMATCH[1]}"
-          fi
-          appendline="$appendline $line"
-          [[ -z $routeSection ]] && storeRoute=1
-          addline=1
         fi
       fi
     done < "$1"
@@ -202,14 +200,14 @@ removeOutputKeyword ()
     pattern="[Oo][Uu][Tt][Pp][Uu][Tt]"
     removeAnyKeyword "$testRouteSection" "$pattern" || functionExitStatus=1
     if (( functionExitStatus != 0 )) ; then
-      warning "Presence opt the 'OUTPUT' keyword might indicate that the calculation is not suited for a property run."
+      warning "Presence of the 'OUTPUT' keyword might indicate that the calculation is not suited for a property run."
     fi
     return $functionExitStatus
 }
 
 addRunKeywords ()
 { 
-    local newKeywords="geom=allcheck guess(read,only) output=wfx"
+    local newKeywords="geom=allcheck guess(read,only) output=$wavefunctionType"
     newRouteSection="$1 $newKeywords"
 }
     
@@ -239,7 +237,7 @@ createNewInputFileData ()
       #  after all the calculation might not be completed yet.)
       [[ ! -e $checkpointfile ]] && fatal "Cannot find '$checkpointfile'."
     fi
-    wavefunctionfile="${checkpointfile%.chk}.wfx"
+    wavefunctionfile="${checkpointfile%.chk}.$wavefunctionType"
     # Check if wavefunctionfile already exists
     [[ -e $wavefunctionfile ]] && fatal "File '$wavefunctionfile' already exists. Rename or delete it."
 }   
@@ -249,6 +247,7 @@ printNewInputFile ()
 {
     local -a tmpRouteSection=($newRouteSection)
     echo "%chk=$checkpointfile"
+    echo "%NoSave"
     fold -w80 -c -s <<< "${tmpRouteSection[@]}"
     echo ""
     echo "$wavefunctionfile"
@@ -260,8 +259,18 @@ printNewInputFile ()
 #
 
 (( $# == 0 )) && helpme
-#hlp There are no options yet. (Work in progress, I guess.)"
+#hlp OPTIONS:
+#hlp   -h     Prints this message
 [[ "$1" == "-h" ]] && helpme
+
+#hlp   -n     Produces wfn instead of wfx file
+if [[ "$1" == "-n" ]] ; then
+  wavefunctionType="wfn"
+  shift
+else
+  wavefunctionType="wfx"
+fi
+
 
 inputFilename="$1"
 [[ ! -e "$inputFilename" ]] && fatal "Cannot access '$inputFilename'."
@@ -273,6 +282,6 @@ outputFilename="${inputFilename%.*}.prop.com"
 createNewInputFileData "$inputFilename"
 printNewInputFile > "$outputFilename"
 
-message "Modified '$titleSection'."
+message "Modified '$inputFilename'."
 message "New Input is called '$outputFilename'."
 message "$scriptname is part of tools-for-g09.bash $version ($versiondate)"

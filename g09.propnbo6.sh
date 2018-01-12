@@ -3,8 +3,8 @@
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
-version="0.1.4dev"
-versiondate="2018-01-xx"
+version="0.1.4"
+versiondate="2018-01-12"
 
 # A script to take an input file and write a new inputfile to 
 # perform a (non-standard) nbo6 analysis.
@@ -94,7 +94,7 @@ parseInputfile ()
     local line appendline 
     # The hash marks the beginning of the route
     local routeStartPattern="^[[:space:]]*#[nNpPtT]?[[:space:]]"
-    local storeRoute=0 storeTitle=0 storeChargeMultiplicity=0 addline=0
+    local storeRoute=0 storeTitle=0 storeChargeMultiplicity=0 
     while read -r line; do
       # If we found the checkpointfile, we can skip out of the loop
       if [[ -z $checkpointfile ]] ; then
