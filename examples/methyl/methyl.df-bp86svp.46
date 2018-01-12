@@ -1,0 +1,48 @@
+  AO  ALPHA  29
+  C 1 (s)   C 1 (s)   C 1 (s)   C 1 (px)  C 1 (py)  C 1 (pz)  C 1 (px) 
+  C 1 (py)  C 1 (pz)  C 1 (d5)  C 1 (d2)  C 1 (d3)  C 1 (d4)  C 1 (d1) 
+  H 2 (s)   H 2 (s)   H 2 (px)  H 2 (py)  H 2 (pz)  H 3 (s)   H 3 (s)  
+  H 3 (px)  H 3 (py)  H 3 (pz)  H 4 (s)   H 4 (s)   H 4 (px)  H 4 (py) 
+  H 4 (pz) 
+  NAO ALPHA  29
+  C 1( 1s ) C 1( 2s ) C 1( 3s ) C 1( 2px) C 1( 3px) C 1( 2py) C 1( 3py)
+  C 1( 2pz) C 1( 3pz) C 1( 3d1) C 1( 3d2) C 1( 3d3) C 1( 3d4) C 1( 3d5)
+  H 2( 1s ) H 2( 2s ) H 2( 2px) H 2( 2py) H 2( 2pz) H 3( 1s ) H 3( 2s )
+  H 3( 2px) H 3( 2py) H 3( 2pz) H 4( 1s ) H 4( 2s ) H 4( 2px) H 4( 2py)
+  H 4( 2pz)
+  NHO ALPHA  29
+  C 1(cr)   C 1(lp)   C 1( H 2) H 2( C 1) C 1( H 3) H 3( C 1) C 1( H 4)
+  H 4( C 1) C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)  
+  C 1(ry)   C 1(ry)   C 1(ry)   H 2(ry)   H 2(ry)   H 2(ry)   H 2(ry)  
+  H 3(ry)   H 3(ry)   H 3(ry)   H 3(ry)   H 4(ry)   H 4(ry)   H 4(ry)  
+  H 4(ry)  
+  NBO ALPHA  29
+  C 1(cr)   C 1(lp)   C 1- H 2  C 1- H 3  C 1- H 4  C 1- H 2* C 1- H 3*
+  C 1- H 4* C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)  
+  C 1(ry)   C 1(ry)   C 1(ry)   H 2(ry)   H 2(ry)   H 2(ry)   H 2(ry)  
+  H 3(ry)   H 3(ry)   H 3(ry)   H 3(ry)   H 4(ry)   H 4(ry)   H 4(ry)  
+  H 4(ry)  
+  AO  BETA   29
+  C 1 (s)   C 1 (s)   C 1 (s)   C 1 (px)  C 1 (py)  C 1 (pz)  C 1 (px) 
+  C 1 (py)  C 1 (pz)  C 1 (d5)  C 1 (d2)  C 1 (d3)  C 1 (d4)  C 1 (d1) 
+  H 2 (s)   H 2 (s)   H 2 (px)  H 2 (py)  H 2 (pz)  H 3 (s)   H 3 (s)  
+  H 3 (px)  H 3 (py)  H 3 (pz)  H 4 (s)   H 4 (s)   H 4 (px)  H 4 (py) 
+  H 4 (pz) 
+  NAO BETA   29
+  C 1( 1s ) C 1( 2s ) C 1( 3s ) C 1( 2px) C 1( 3px) C 1( 2py) C 1( 3py)
+  C 1( 2pz) C 1( 3pz) C 1( 3d1) C 1( 3d2) C 1( 3d3) C 1( 3d4) C 1( 3d5)
+  H 2( 1s ) H 2( 2s ) H 2( 2px) H 2( 2py) H 2( 2pz) H 3( 1s ) H 3( 2s )
+  H 3( 2px) H 3( 2py) H 3( 2pz) H 4( 1s ) H 4( 2s ) H 4( 2px) H 4( 2py)
+  H 4( 2pz)
+  NHO BETA   29
+  C 1(cr)   C 1( H 2) H 2( C 1) C 1( H 3) H 3( C 1) C 1( H 4) H 4( C 1)
+  C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)  
+  C 1(ry)   C 1(ry)   C 1(ry)   H 2(ry)   H 2(ry)   H 2(ry)   H 2(ry)  
+  H 3(ry)   H 3(ry)   H 3(ry)   H 3(ry)   H 4(ry)   H 4(ry)   H 4(ry)  
+  H 4(ry)  
+  NBO BETA   29
+  C 1(cr)   C 1- H 2  C 1- H 3  C 1- H 4  C 1(lv)   C 1- H 2* C 1- H 3*
+  C 1- H 4* C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)   C 1(ry)  
+  C 1(ry)   C 1(ry)   C 1(ry)   H 2(ry)   H 2(ry)   H 2(ry)   H 2(ry)  
+  H 3(ry)   H 3(ry)   H 3(ry)   H 3(ry)   H 4(ry)   H 4(ry)   H 4(ry)  
+  H 4(ry)  

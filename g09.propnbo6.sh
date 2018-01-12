@@ -143,16 +143,23 @@ parseInputfile ()
     done < "$1"
 }
 
-removeAnyKeyword ()
+collateKeywords ()
 {
-    # Takes in the route section (a string) and 
-    local testLine="$1"
-    # removes the pattern (keyword) if present and 
-    local testPattern="$2"
-    # stores the result to the new route section.
-    # The pattern is extended to catch more format options of the keyword,
-    # as the calling option only really needs to specify the smallest possible pattern.
-    # The following formats are given in the manual:
+    # This function removes spaces which have been entered in the original input
+    # so that the folding (to 80 characters) doesn't break a keyword.
+    local inputstring="$1"
+    # The collated section will be saved to
+    local keepstring
+    # If we encounter a long keyword stack, we need to set a different returncode
+    local returncode=0
+    # extract the hashtag of the route section
+    local routeStartPattern="^[[:space:]]*(#[nNpPtT]?)[[:space:]]"
+    if [[ $inputstring =~ $routeStartPattern ]] ; then
+      keepstring="${BASH_REMATCH[1]}"
+      inputstring="${inputstring//${BASH_REMATCH[0]}/}"
+    fi
+
+    # The following formats for the input of keywords are given in the manual:
     #   keyword = option
     #   keyword(option)
     #   keyword=(option1, option2, …)
@@ -160,11 +167,60 @@ removeAnyKeyword ()
     # Spaces can be added or left out, I could also confirm that the following will work, too:
     #   keyword (option[1, option2, …])
     #   keyword = (option[1, option2, …])
-    # The following extension should catch them all.
-    local extendedPattern="($testPattern[^[:space:]]*)([[:space:]]+[=]?[[:space:]]*\([^\)]+\))?([[:space:]]+|,|/|$)"
+    # Spaces, tabs, commas, or forward slashes can be used in any combination 
+    # to separate items within a line. 
+    # Multiple spaces are treated as a single delimiter.
+    # see http://gaussian.com/input/?tabid=1
+    # The ouptput of this function should only use the keywords without any options, or
+    # the following format: keyword=(option1,option2,…) [no spaces]
+    local keywordpattern="[^[:space:],/=]+"
+    local keywordoptions="[[:space:]]*=[[:space:]]*[^[:space:],/\(\)]+|[[:space:]]*[=]?[[:space:]]*\([^\)]+\)"
+    local keywordterminate="[[:space:],/]+|$"
+    local testpattern="($keywordpattern)($keywordoptions)?($keywordterminate)"
+    local keepKeyword keepOptions
+    while [[ $inputstring =~ $testpattern ]] ; do
+      #% echo "-->|$inputstring|<--"
+      #% echo "-->|${BASH_REMATCH[0]}|__|${BASH_REMATCH[1]}|__|${BASH_REMATCH[2]}|__|${BASH_REMATCH[3]}|" # |${BASH_REMATCH[4]}|" 
+      # Unify input pattern and remove unnecessary spaces
+      inputstring="${inputstring//${BASH_REMATCH[0]}/}"
+      keepKeyword="${BASH_REMATCH[1]}"
+      keepOptions="${BASH_REMATCH[2]}"
+      keepTerminate="${BASH_REMATCH[3]}"
+      if [[ $keepOptions =~ ^[[:space:]]*[=]?[[:space:]]*[\(]?([^\)]+)[\)]?[[:space:]]*$ ]] ; then
+        keepOptions="${BASH_REMATCH[1]}"
+        keepKeyword="$keepKeyword(${keepOptions// /})"
+      fi
+      if [[ $keepTerminate =~ / ]] ; then
+        keepKeyword="$keepKeyword/"
+      fi
+      (( ${#keepKeyword} > 80 )) && returncode=1
+      if [[ $keepstring =~ /$ ]] ; then
+        keepstring="$keepstring$keepKeyword"
+      else
+        keepstring="$keepstring $keepKeyword"
+      fi
+      #% echo "-->|$inputstring|<--"
+    done
+
+    echo "$keepstring"
+    return $returncode
+}
+
+removeAnyKeyword ()
+{
+    # Takes in a string (the route section) and 
+    local testLine="$1"
+    # removes the pattern (keyword) if present and 
+    local testPattern="$2"
+    # stores the result to the new route section.
+    # Since spaces have been removed form within the keywords previously with collateKeywords, 
+    # and inter-keyword delimiters are set to spaces only also, 
+    # it is safe to use that as a criterion to remove unnecessary keywords.
+    # The test pattern is extended to catch the whole keyword including options.
+    local extendedPattern="($testPattern[^[:space:]]*)([[:space:]]+|$)"
     if [[ $testLine =~ $extendedPattern ]] ; then
       #echo "-->|${BASH_REMATCH[0]}|<--" #(Debug Pattern:)
-      local foundPattern=${BASH_REMATCH[0]}
+      local foundPattern=${BASH_REMATCH[1]}
       message "Removed keyword '$foundPattern'."
       newRouteSection="${testLine/$foundPattern/}"
       return 1
@@ -231,19 +287,17 @@ removeOutputKeyword ()
 addRunKeywords ()
 { 
     local newKeywords="geom=check guess(read,only) pop=nbo6read"
-    newRouteSection="$1 $newKeywords"
+    newRouteSection=$(collateKeywords "$1 $newKeywords $customRouteInput")
 }
     
 createNewInputFileData ()
 {
-  #set -x
     parseInputfile "$1"
-    #  echo "$checkpointfile"
-    #  echo "$routeSection"
-    #  echo "$titleSection"
-  #set +x
 
-    newRouteSection="$routeSection"
+    # If there were any long keywords, then return value is not 0.
+    # A warning must be issued
+    newRouteSection=$(collateKeywords "$routeSection" || return 1)
+    (( $? > 0 )) && warning "Found extremely long keyword. Check generated input before submitting the calculation."
     
     while ! removeOptKeyword    "$newRouteSection" ; do : ; done
     while ! removeFreqKeyword   "$newRouteSection" ; do : ; done
@@ -270,10 +324,8 @@ createNewInputFileData ()
 # Print the input file in a more readable form
 printNewInputFile ()
 {
-    local -a tmpRouteSection=($newRouteSection)
     echo "%chk=$checkpointfile"
-    echo "%NoSave"
-    fold -w80 -c -s <<< "${tmpRouteSection[@]}"
+    fold -w80 -c -s <<< "$newRouteSection"
     echo ""
     fold -w80 -c -s <<< "$titleSection"
     echo ""
@@ -284,6 +336,10 @@ printNewInputFile ()
     [[ ! -z $customNBO6Input ]] && echo "  $customNBO6Input"
     echo "\$END"
     echo ""
+    if [[ ! -z $customTail ]] ; then
+      echo "$customTail"
+      echo ""
+    fi
 }
 
 #
@@ -292,25 +348,43 @@ printNewInputFile ()
 
 (( $# == 0 )) && helpme
 
-# Evaluate options (only temporary, since there are only two)
+# Evaluate options 
 #
 #hlp OPTIONS: 
-#hlp   -h         Prints this short help message
-[[ "$1" == "-h" ]] && helpme
+while getopts :n:r:t:hu options ; do
+    case $options in
 
-#hlp   -c <ARG>   Adds custom commands to the nbo6 input stack
-if [[ "$1" =~ ^-c(.*)$ ]] ; then
-  customNBO6Input="${BASH_REMATCH[1]}"
-  shift
-  if [[ -z $customNBO6Input ]] ; then
-    customNBO6Input="$1"
-    shift
-  fi
-fi
+           #hlp   -n <ARG>   Adds custom command <ARG> to the nbo6 input stack.
+           #hlp              May be specified multiple times.
+        n) customNBO6Input="$customNBO6Input $OPTARG" ;;
 
+           #hlp   -r <ARG>   Adds custom command <ARG> to the route section.
+           #hlp              May be specified multiple times.
+           #hlp              The stack will be collated, but no sanity check will be performed.
+        r) customRouteInput="$customRouteInput $OPTARG" ;;
+
+           #hlp   -t <ARG>   Adds <ARG> to the end (tail) of the new input file.
+           #hlp              If specified multiple times, only the last one has an effect.
+        t) customTail="$OPTARG" ;;
+
+           #hlp   -h         Prints this short help message
+        h) helpme ;;
+        u) helpme ;;
+
+       \?) warning "Invalid option: -$OPTARG." ;;
+
+        :) fatal "Option -$OPTARG requires an argument." ;;
+    esac
+done
+shift $((OPTIND-1))
+
+[[ -z $1 ]] && fatal "No filename specified."
 inputFilename="$1"
 [[ ! -e "$inputFilename" ]] && fatal "Cannot access '$inputFilename'."
 [[ ! -r "$inputFilename" ]] && fatal "Cannot access '$inputFilename'."
+
+shift
+(( $# > 0 )) && warning "Additional input will be ignored."
 
 outputFilename="${inputFilename%.*}.nbo6.com"
 [[   -e "$outputFilename" ]] && fatal "File '$outputFilename' exists. Rename or delete it."

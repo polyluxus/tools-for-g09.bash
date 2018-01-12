@@ -138,20 +138,35 @@ To Do:
  - Implement option to set `GAUSS_MEMDEF` for the utilities. Currently 
  if memory is scarce you need to use raw or bash mode.
 
-### g09.genwfx.sh
+### g09.propwfx.sh (used to be g09.genwfx.sh)
 
 This script reads an inputfile and produces a new inputfile to perform a property run.
 In such a run no calculation will be performed, therefore a checkpointfile is
 strictly neccessary. It also is possible to run these calculations interactively
 with the wrapper script, as they should only take a few minutes at most.
 
-### water.sample.tgz
+The `-n` switch requests to write the older version `wfn` (PROAIMS) instead of
+the newer extended `wfx` (AIMPAC) files.
+
+(A symbolic link to g09.genwfx.sh is retained for now.)
+
+### g09.propnbo6.sh
+
+This script takes a Gaussian inputfile and writes a new inputfile for a property run,
+a NBO6 analysis, similar to g09.propwfx above.
+The newly created inputfile relies on a checkpointfile to read all data for the NBO6 analysis.
+Depending on the size of the molecule, a NBO analysis can take some time.
+
+Additional Input can be given to be processed via `-n` (NBO input stack), 
+`-r` (Route section), and `-t` (tail of the file).
+
+### examples (directory; used to be water.sample.tgz)
 
 Contains a collection of Gaussian 09 in- and outputs for demonstration
-and testing.
+and testing. Mainly the files I have used to test the scripts.
 
 ---
 
 more tools in preparation (?)
 
-(Martin; 0.1.3; 2018-01-09.)
+(Martin; 0.1.4; 2018-01-12)
