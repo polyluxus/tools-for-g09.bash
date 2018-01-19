@@ -5,8 +5,8 @@
 # coordinates using Open Babel.
 # 
 # This was last updated with 
-version="0.1.2"
-versiondate="2017-12-19"
+version="0.1.5"
+versiondate="2018-01-19"
 # of tools-for-g09.bash
 
 #
@@ -57,6 +57,7 @@ indent ()
 warning ()
 {
     echo "WARNING: " "$*" >&2
+    return 1
 }
 
 fatal ()
@@ -85,6 +86,12 @@ is_readable_file_or_exit ()
     is_readable "$1" || fatal "Specified file '$1' is not readable."
 }
 
+is_readable_file_and_warn ()
+{
+    is_file "$1"     || warning "Specified file '$1' is no file or does not exist."
+    is_readable "$1" || warning "Specified file '$1' is not readable."
+}
+
 #
 # Check if file exists and prevent overwriting
 #
@@ -103,30 +110,71 @@ backup_if_exists ()
 }
 
 #
+# Format checkpoint file, write xyz coordinates
+# a.k.a. run the programs
+#
+
+format_one_checkpoint ()
+{
+    local returncode=0
+    local input_chk="$1"
+    local output_fchk="${input_chk%.*}.fchk"
+    local output_xyz="${input_chk%.*}.xyz"
+    
+    backup_if_exists "$output_fchk"
+    backup_if_exists "$output_xyz"
+    
+    # Run the programs
+    $bin_formchk "$input_chk" "$output_fchk" || returncode="$?"
+    (( returncode == 0 )) || return "$retruncode"
+    $bin_babel -ifchk "$output_fchk" -oxyz -O"$output_xyz" || (( returncode+=$? ))
+    (( returncode == 0 )) || return "$retruncode"
+
+    message "Formatted '$input_chk'; written '$output_xyz'."
+}
+
+format_only ()
+{
+    # run only for commandline arguments
+    is_readable_file_and_warn "$1" && format_one_checkpoint "$1" || return $?
+}
+
+format_all ()
+{
+    # run over all checkpoint files
+    local input_chk returncode=0
+    message "Working on all checkpoint files in ${PWD#\/*\/*\/}." 
+    for input_chk in *.chk; do
+      format_only "$input_chk" || (( returncode+=$? ))
+    done
+    return $returncode
+}
+
+#
 # MAIN SCRIPT
 #
+
+exit_status=0
 
 if [[ -z "$1" ]] ; then
   fatal "No checkpointfile specified."
 fi
 
 if [[ "$1" == "-h" ]] ; then
-  message "Usage: $0 <checkpointfile>"
+  message "Usage: $0 <checkpointfile(s)> (Formats list of '*.chk'."
+  message "Usage: $0 -f                  (Formats all '*.chk'.)"
   message "Distributed with tools-for-g09.bash $version ($versiondate)"
   exit 0
 fi
 
-is_readable_file_or_exit "$1"
-input_chk="$1"
+if [[ "$1" == "-f" ]] ; then
+  format_all || exit_status=$? 
+else
+  while [[ ! -z $1 ]] ; do
+    format_only "$1" || (( exit_status+=$? ))
+    shift
+  done
+fi
 
-output_fchk="${input_chk%.*}.fchk"
-backup_if_exists "$output_fchk"
-
-output_xyz="${input_chk%.*}.xyz"
-backup_if_exists "$output_xyz"
-
-# Run the programs
-$bin_formchk "$input_chk" "$output_fchk" || fatal "Something went wrong."
-$bin_babel -ifchk "$output_fchk" -oxyz -O"$output_xyz" || fatal "Something went wrong."
-
+(( exit_status == 0 )) || fatal "There have been one or more errors."
 message "Script complete. Bye!"

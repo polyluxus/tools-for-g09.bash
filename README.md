@@ -65,7 +65,7 @@ To Do:
 
  - include customised outputline (specify which quantities are printed)
  - review of the code and extended testing (review implemented) 
- - fix bug when locale is not set to English (temprorarily set to en_US.utf8 done) 
+ - fix bug when locale is not set to English (temprorarily set to `en_US.utf8` done) 
  - script does not properly work for mp2 (..) calculations, as it does not 
    fetch the appropriate corrections
  - etc.
@@ -76,6 +76,10 @@ This script uses a (binary) checkpointfile, writes a formatted
 checkpointfile, and uses Open Babel to write xyz coordinates.
 This script has to be configured to find the right executables, 
 and needs a recent installation of Open Babel. (Who'd have guessed?!)
+
+The `-f` switch looks for all checkpoint files, formats them, and 
+extracts the coordinates. This can be very helpful for archiving 
+calculations.
 
 ### g09.wrapper.sh
 
@@ -169,4 +173,4 @@ and testing. Mainly the files I have used to test the scripts.
 
 more tools in preparation (?)
 
-(Martin; 0.1.4; 2018-01-12)
+(Martin; 0.1.5; 2018-01-19)

@@ -3,8 +3,8 @@
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
-version="0.1.4"
-versiondate="2018-01-12"
+version="0.1.5"
+versiondate="2018-01-19"
 
 # A script to take an input file and write a new inputfile to 
 # obtain a wfx file.
@@ -299,7 +299,8 @@ createNewInputFileData ()
 # Print the input file in a more readable form
 printNewInputFile ()
 {
-    echo "%chk=$checkpointfile"
+    echo "%oldchk=$checkpointfile"
+    echo "%NoSave"
     fold -w80 -c -s <<< "$newRouteSection"
     echo ""
     echo "$wavefunctionfile"
