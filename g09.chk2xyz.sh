@@ -1,13 +1,18 @@
 #!/bin/bash
 #
-# A very quick script to transform a checkpointfile
-# to a formatted checkpointfile and then to xyz 
-# coordinates using Open Babel.
+#hlp A very quick script to transform a checkpointfile
+#hlp to a formatted checkpointfile and then to xyz 
+#hlp coordinates using Open Babel.
+#hlp Usage: $scriptname [option] <checkpointfile(s)>
+#hlp Distributed with tools-for-g09.bash $version ($versiondate)
 # 
 # This was last updated with 
 version="0.1.5"
 versiondate="2018-01-19"
 # of tools-for-g09.bash
+
+scriptname=${0##*\/} # Remove trailing path
+scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
 #
 # CONFIGURATION
@@ -23,7 +28,7 @@ versiondate="2018-01-19"
 # If you have a local istall installation, and don't want to 
 # use the wrapper, then the following line should work well
 #   bin_formchk="formchk -3" 
-#(-3 for verson 3 fchk; that is the default in the wrapper)
+# (-3 for verson 3 fchk; that is the default in the wrapper)
 # The hard coded path to the binary works also.
 #   bin_formchk="/path/to/g09/formchk -3"
 #
@@ -65,6 +70,25 @@ fatal ()
     echo "ERROR  : " "$*" >&2
     exit 1
 }
+
+#
+# Print some helping commands
+# The lines are distributed throughout the script and grepped for
+#
+
+helpme ()
+{
+    # message "This script takes a Gaussian inputfile and writes a new inputfile for a property run."
+    # message "There are no options yet. (Work in progress, I guess.)"
+    # message "Version: $version ($versiondate)"
+    local line
+    local pattern="^[[:space:]]*#hlp[[:space:]](.*$)"
+    while read -r line; do
+      [[ $line =~ $pattern ]] && eval "echo \"${BASH_REMATCH[1]}\""
+    done < <(grep "#hlp" "$0")
+    exit 0
+}
+
 
 #
 # Test, whether we can access the given file/directory
@@ -126,9 +150,15 @@ format_one_checkpoint ()
     
     # Run the programs
     $bin_formchk "$input_chk" "$output_fchk" || returncode="$?"
-    (( returncode == 0 )) || return "$retruncode"
+    if (( returncode != 0 )) ; then
+      warning "There was an issue with formatting the checkpointfile."
+      return "$returncode"
+    fi
     $bin_babel -ifchk "$output_fchk" -oxyz -O"$output_xyz" || (( returncode+=$? ))
-    (( returncode == 0 )) || return "$retruncode"
+    if (( returncode != 0 )) ; then
+      warning "There was an issue with writing the coordinates."
+      return "$returncode"
+    fi
 
     message "Formatted '$input_chk'; written '$output_xyz'."
 }
@@ -155,21 +185,33 @@ format_all ()
 #
 
 exit_status=0
+skip_list="false"
 
-if [[ -z "$1" ]] ; then
-  fatal "No checkpointfile specified."
-fi
+(( $# == 0 )) &&  fatal "No checkpointfile specified."
 
-if [[ "$1" == "-h" ]] ; then
-  message "Usage: $0 <checkpointfile(s)> (Formats list of '*.chk'."
-  message "Usage: $0 -f                  (Formats all '*.chk'.)"
-  message "Distributed with tools-for-g09.bash $version ($versiondate)"
-  exit 0
-fi
+# Initialise options
+OPTIND="1"
 
-if [[ "$1" == "-f" ]] ; then
-  format_all || exit_status=$? 
-else
+while getopts :fh options ; do
+  case $options in
+    #hlp OPTIONS:
+    #hlp   -f      Formats all checkpointfiles that are found in the current directory
+    f) format_all || exit_status=$?
+       skip_list="true"
+       ;;
+    #hlp   -h      Prints this help text
+    h) helpme ;; 
+
+   \?) fatal "Invalid option: -$OPTARG." ;;
+
+    :) fatal "Option -$OPTARG requires an argument." ;;
+
+  esac
+done
+
+shift $(( OPTIND - 1 ))
+
+if [[ $skip_list != "true" ]] ; then
   while [[ ! -z $1 ]] ; do
     format_only "$1" || (( exit_status+=$? ))
     shift
@@ -177,4 +219,5 @@ else
 fi
 
 (( exit_status == 0 )) || fatal "There have been one or more errors."
-message "Script complete. Bye!"
+
+message "$scriptname is part of tools-for-g09.bash $version ($versiondate)"
