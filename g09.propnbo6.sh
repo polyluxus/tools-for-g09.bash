@@ -4,7 +4,7 @@ scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
 version="0.1.5"
-versiondate="2018-01-19"
+versiondate="2018-01-20"
 
 # A script to take an input file and write a new inputfile to 
 # perform a (non-standard) nbo6 analysis.
@@ -12,8 +12,8 @@ versiondate="2018-01-19"
 
 #hlp This script takes a Gaussian inputfile and writes a new inputfile for a property run.
 #hlp The newly created inputfile relies on a checkpointfile to read all data for the NBO6 analysis.
-#hlp Version: $version ($versiondate)
 #hlp Usage: $scriptname [options] filename
+#hlp
 
 #
 # Print logging information and warnings nicely.
@@ -49,7 +49,7 @@ fatal ()
 helpme ()
 {
     local line
-    local pattern="^[[:space:]]*#hlp[[:space:]](.*$)"
+    local pattern="^[[:space:]]*#hlp[[:space:]]?(.*)$"
     while read -r line; do
       [[ $line =~ $pattern ]] && eval "echo \"${BASH_REMATCH[1]}\""
     done < <(grep "#hlp" "$0")
@@ -357,18 +357,22 @@ while getopts :n:r:t:hu options ; do
 
            #hlp   -n <ARG>   Adds custom command <ARG> to the nbo6 input stack.
            #hlp              May be specified multiple times.
+           #hlp 
         n) customNBO6Input="$customNBO6Input $OPTARG" ;;
 
            #hlp   -r <ARG>   Adds custom command <ARG> to the route section.
            #hlp              May be specified multiple times.
            #hlp              The stack will be collated, but no sanity check will be performed.
+           #hlp 
         r) customRouteInput="$customRouteInput $OPTARG" ;;
 
            #hlp   -t <ARG>   Adds <ARG> to the end (tail) of the new input file.
            #hlp              If specified multiple times, only the last one has an effect.
+           #hlp 
         t) customTail="$OPTARG" ;;
 
            #hlp   -h         Prints this short help message
+           #hlp 
         h) helpme ;;
         u) helpme ;;
 
@@ -395,4 +399,5 @@ printNewInputFile > "$outputFilename"
 
 message "Modified '$inputFilename'."
 message "New input is called '$outputFilename'."
+#hlp (Martin; $version; $versiondate.)
 message "$scriptname is part of tools-for-g09.bash $version ($versiondate)"
