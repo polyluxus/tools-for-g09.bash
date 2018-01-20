@@ -4,15 +4,13 @@ scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
 version="0.1.5"
-versiondate="2018-01-19"
+versiondate="2018-01-20"
 
 # A script to take an input file and write a new inputfile to 
 # obtain a wfx file.
 # To Do: import (formatted) checkpoint files
 
 #hlp This script takes a Gaussian inputfile and writes a new inputfile for a property run.
-#hlp Version: $version ($versiondate)
-#hlp Usage: $scriptname [options] filename
 
 #
 # Print logging information and warnings nicely.
@@ -312,18 +310,39 @@ printNewInputFile ()
 #
 
 (( $# == 0 )) && helpme
-#hlp OPTIONS:
-#hlp   -h     Prints this message
-[[ "$1" == "-h" ]] && helpme
 
-#hlp   -n     Produces wfn instead of wfx file
-if [[ "$1" == "-n" ]] ; then
-  wavefunctionType="wfn"
-  shift
-else
-  wavefunctionType="wfx"
-fi
+# Default output mode
+wavefunctionType="wfx"
 
+# Get options
+# Initialise options
+OPTIND="1"
+
+while getopts :hn options ; do
+  #hlp Usage: $scriptname [options] filename
+  #hlp
+  #hlp Options:
+  case $options in
+    #hlp   -n        Request writing wfn instead of wfx file
+    #hlp
+    n) wavefunctionType="wfn" ;;
+
+    #hlp   -x        Request writing wfx (default)
+    x) wavefunctionType="wfx" ;;
+
+    #hlp   -h        Prints this help text
+    #hlp
+    h) helpme ;; 
+
+    #hlp More options in preparation.
+   \?) fatal "Invalid option: -$OPTARG." ;;
+
+    :) fatal "Option -$OPTARG requires an argument." ;;
+
+  esac
+done
+
+shift $(( OPTIND - 1 ))
 
 inputFilename="$1"
 [[ ! -e "$inputFilename" ]] && fatal "Cannot access '$inputFilename'."
@@ -337,4 +356,5 @@ printNewInputFile > "$outputFilename"
 
 message "Modified '$inputFilename'."
 message "New Input is called '$outputFilename'."
+#hlp (Martin; $version; $versiondate.)
 message "$scriptname is part of tools-for-g09.bash $version ($versiondate)"
