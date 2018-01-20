@@ -27,7 +27,7 @@ Thank you for your interest.
 ---
 
 Short overview and introduction of the bundle scripts and files.
-Most scripts come with a '-h' option for a short description, that should
+Most scripts come with a `-h` option for a short description, that should
 always work, regardless of the set paths.
 
 With the release of Gaussian 16, all names have been prepended with g09.
@@ -88,8 +88,18 @@ Some configuration is required for it to work, i.e. it has to find the
 correct Gaussian directory, the scratch directory, and the NBO6 
 directory (optional).   
 Several modes have been predefined for convenience.
+They are accessible via short options and keywords.
 In general no sanity check on the inputfiles will be performed.
 
+General usage:
+```
+  g09.wrapper [scriptoptions] commands
+```
+Scriptoptions can be used to set memory requirements `-m` or processes `-p`. 
+Depending on the command used these may or may not have an effect.
+Use the `-h` switch to get more information.
+
+The following shortcuts have been implemented.
 ```
   g09.wrapper <inputfile>
 ```
@@ -97,24 +107,22 @@ When provided with and Gaussian inputfile, the wrapper will initialise
 the Gaussian environment and perform a calculation.
 
 ```
-  g09.wrapper formchk [option] [<input>] [<output>]
+  g09.wrapper ( -f | formchk | formcheck ) [option] [<input>] [<output>]
 ```
-Calls the G09 utility `formchk` with the default option `-3` (see manual).
-Possible values for option (exclusive): `-3`, `-2`, `-c`.
+Calls the G09 utility `formchk` with the default option `-3` (see Gaussian manual).
+Possible values for options (exclusive): `-3`, `-2`, `-c`.
 Input and output are optional arguments, if not present, they will be 
 prompted for or guessed.  
-(The option `formcheck` is a synonym for `formchk`.)
 
 ```
-  g09.wrapper unfchk [<input>] [<output>]
+  g09.wrapper ( -u | unfchk | unformcheck ) [<input>] [<output>]
 ```
-Calls the G09 utility unfchk (see manual).
+Calls the G09 utility unfchk (see Gaussian manual).
 Input and output are optional arguments, if not present, they will be
 prompted for or guessed.  
-(The option `unformcheck` is a synonym for `unfchk`.)
 
 ```
-  g09.wrapper cubegen [parameters]
+  g09.wrapper ( -c | cubegen ) [parameters]
 ```
 Calls the G09 utility cubegen (see manual).    
 No sanity check of parameters will be performend.  
@@ -126,14 +134,14 @@ Example command:
  with 80 points per side of the cube including header.)
 
 ```
-  g09.wrapper raw [command(s)]
+  g09.wrapper ( -r | raw ) [command(s)]
 ```
 This is the free-form option of the wrapper.
 It can be used with any command(s), it only temporarily loads the g09 
 environment. See the Gaussian manual for more information.
 
 ```
-  g09.wrapper bash
+  g09.wrapper ( -b | bash )
 ```
 Loads the environment settings and then opens a bash subshell.
 You can pretty much run any command with that. 
