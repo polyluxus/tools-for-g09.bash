@@ -32,12 +32,13 @@ message ()
 
 warning ()
 {
-    echo "WARNING: " "$@"
+    echo "WARNING: " "$@" >&2
+    return 1
 }
 
 fatal ()
 {
-    echo "ERROR  : " "$@"
+    echo "ERROR  : " "$@" >&2
     exit 1
 }
 

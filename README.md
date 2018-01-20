@@ -27,7 +27,7 @@ Thank you for your interest.
 ---
 
 Short overview and introduction of the bundle scripts and files.
-Most scripts come with a `-h` option for a short description, that should
+The scripts come with a `-h` option for a short description, that should
 always work, regardless of the set paths.
 
 With the release of Gaussian 16, all names have been prepended with g09.
@@ -48,7 +48,7 @@ See also http://codereview.stackexchange.com/q/129854/92423
 
 To Do:
  - Includeoptions for more file suffixes
- - write to file istead of stout
+ - write to file instead of stout
  - include timestamp of file
  - etc.
 
@@ -64,9 +64,8 @@ See also http://codereview.stackexchange.com/q/131666/92423
 To Do: 
 
  - include customised outputline (specify which quantities are printed)
- - review of the code and extended testing (review implemented) 
- - fix bug when locale is not set to English (temprorarily set to `en_US.utf8` done) 
- - script does not properly work for mp2 (..) calculations, as it does not 
+ - fix bug when locale is not set to English (temprorarily set to `en_US.utf8`) 
+ - script does not properly work for mp2 (...) calculations, as it does not 
    fetch the appropriate corrections
  - etc.
 
@@ -95,7 +94,8 @@ General usage:
 ```
   g09.wrapper [scriptoptions] commands
 ```
-Scriptoptions can be used to set memory requirements `-m` or processes `-p`. 
+Scriptoptions can be used to set memory requirements `-m` or processes `-p` 
+(currently work in progress).
 Depending on the command used these may or may not have an effect.
 Use the `-h` switch to get more information.
 
@@ -181,4 +181,4 @@ and testing. Mainly the files I have used to test the scripts.
 
 more tools in preparation (?)
 
-(Martin; 0.1.5; 2018-01-19)
+(Martin; 0.1.5; 2018-01-20)
