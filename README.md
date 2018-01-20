@@ -27,7 +27,7 @@ Thank you for your interest.
 ---
 
 Short overview and introduction of the bundle scripts and files.
-Most scripts come with a '-h' option for a short description, that should
+The scripts come with a `-h` option for a short description, that should
 always work, regardless of the set paths.
 
 With the release of Gaussian 16, all names have been prepended with g09.
@@ -48,7 +48,7 @@ See also http://codereview.stackexchange.com/q/129854/92423
 
 To Do:
  - Includeoptions for more file suffixes
- - write to file istead of stout
+ - write to file instead of stout
  - include timestamp of file
  - etc.
 
@@ -64,9 +64,8 @@ See also http://codereview.stackexchange.com/q/131666/92423
 To Do: 
 
  - include customised outputline (specify which quantities are printed)
- - review of the code and extended testing (review implemented) 
- - fix bug when locale is not set to English (temprorarily set to en_US.utf8 done) 
- - script does not properly work for mp2 (..) calculations, as it does not 
+ - fix bug when locale is not set to English (temprorarily set to `en_US.utf8`) 
+ - script does not properly work for mp2 (...) calculations, as it does not 
    fetch the appropriate corrections
  - etc.
 
@@ -77,6 +76,10 @@ checkpointfile, and uses Open Babel to write xyz coordinates.
 This script has to be configured to find the right executables, 
 and needs a recent installation of Open Babel. (Who'd have guessed?!)
 
+The `-f` switch looks for all checkpoint files, formats them, and 
+extracts the coordinates. This can be very helpful for archiving 
+calculations.
+
 ### g09.wrapper.sh
 
 This script is a wrapper to access certain utilities from Gaussian 09.
@@ -84,8 +87,19 @@ Some configuration is required for it to work, i.e. it has to find the
 correct Gaussian directory, the scratch directory, and the NBO6 
 directory (optional).   
 Several modes have been predefined for convenience.
+They are accessible via short options and keywords.
 In general no sanity check on the inputfiles will be performed.
 
+General usage:
+```
+  g09.wrapper [scriptoptions] commands
+```
+Scriptoptions can be used to set memory requirements `-m` or processes `-p` 
+(currently work in progress).
+Depending on the command used these may or may not have an effect.
+Use the `-h` switch to get more information.
+
+The following shortcuts have been implemented.
 ```
   g09.wrapper <inputfile>
 ```
@@ -93,24 +107,22 @@ When provided with and Gaussian inputfile, the wrapper will initialise
 the Gaussian environment and perform a calculation.
 
 ```
-  g09.wrapper formchk [option] [<input>] [<output>]
+  g09.wrapper ( -f | formchk | formcheck ) [option] [<input>] [<output>]
 ```
-Calls the G09 utility `formchk` with the default option `-3` (see manual).
-Possible values for option (exclusive): `-3`, `-2`, `-c`.
+Calls the G09 utility `formchk` with the default option `-3` (see Gaussian manual).
+Possible values for options (exclusive): `-3`, `-2`, `-c`.
 Input and output are optional arguments, if not present, they will be 
 prompted for or guessed.  
-(The option `formcheck` is a synonym for `formchk`.)
 
 ```
-  g09.wrapper unfchk [<input>] [<output>]
+  g09.wrapper ( -u | unfchk | unformcheck ) [<input>] [<output>]
 ```
-Calls the G09 utility unfchk (see manual).
+Calls the G09 utility unfchk (see Gaussian manual).
 Input and output are optional arguments, if not present, they will be
 prompted for or guessed.  
-(The option `unformcheck` is a synonym for `unfchk`.)
 
 ```
-  g09.wrapper cubegen [parameters]
+  g09.wrapper ( -c | cubegen ) [parameters]
 ```
 Calls the G09 utility cubegen (see manual).    
 No sanity check of parameters will be performend.  
@@ -122,14 +134,14 @@ Example command:
  with 80 points per side of the cube including header.)
 
 ```
-  g09.wrapper raw [command(s)]
+  g09.wrapper ( -r | raw ) [command(s)]
 ```
 This is the free-form option of the wrapper.
 It can be used with any command(s), it only temporarily loads the g09 
 environment. See the Gaussian manual for more information.
 
 ```
-  g09.wrapper bash
+  g09.wrapper ( -b | bash )
 ```
 Loads the environment settings and then opens a bash subshell.
 You can pretty much run any command with that. 
@@ -169,4 +181,4 @@ and testing. Mainly the files I have used to test the scripts.
 
 more tools in preparation (?)
 
-(Martin; 0.1.4; 2018-01-12)
+(Martin; 0.1.5; 2018-01-20)

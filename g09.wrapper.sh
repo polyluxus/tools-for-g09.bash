@@ -1,11 +1,5 @@
 #!/bin/bash
 
-scriptname=${0##*\/} # Remove trailing path
-scriptname=${scriptname%.sh} # remove scripting ending (if present)
- 
-version="0.1.2"
-versiondate="2017-12-19"
-
 # This is a wrapper to run gaussian jobs/utilities interactively
 #
 # CONFIGURATION
@@ -26,6 +20,13 @@ nbo06bininstallpath="/home/chemsoft/nbo6/nbo6-2016-01-16/bin"
 #
 # END CONFIGURATION
 ###
+
+#hlp $scriptname is a wrapper to access certain utilities from $gaussian09installname
+scriptname=${0##*\/} # Remove trailing path
+scriptname=${scriptname%.sh} # remove scripting ending (if present)
+ 
+version="0.1.5"
+versiondate="2018-01-20"
 
 #
 # Avoid conflicts if another Gaussian version is already sourced
@@ -139,12 +140,6 @@ check_too_many_args ()
 check_file ()
 {
   [[ -f "$1" ]]
-#Schould return the same as
-#  if [[ -f $1 ]]; then 
-#    return 0
-#  else
-#    return 1
-#  fi
 }
 
 #
@@ -178,12 +173,6 @@ calculation ()
 format_checkpoint ()
 {
   local option=""
-##  case $1 in
-##    -3) option="-3"; shift ;;
-##    -2) option="-2"; shift ;;
-##    -c) option="-c"; shift ;;
-##     *) option="-3" ;;
-##  esac
   local pattern="^(-c|-2|-3)$"
   if [[ "$1" =~ $pattern ]] ; then
     option="${BASH_REMATCH[1]}"
@@ -197,6 +186,7 @@ format_checkpoint ()
     option="-3"
   fi
 
+  set_g09_variables
   if [[ -z $1 ]]; then 
     formchk "$option"
     joberror=$?
@@ -214,7 +204,6 @@ format_checkpoint ()
     shift
     check_too_many_args "$@"
   fi
-  set_g09_variables
   formchk "$option" "$input_checkpoint" "$output_checkpoint"
   joberror=$?
 }
@@ -222,6 +211,7 @@ format_checkpoint ()
 # Produce a binary checkpointfile 
 unformat_checkpoint ()
 {
+  set_g09_variables
   if [[ -z $1 ]] ; then 
     unfchk
     joberror=$?
@@ -237,7 +227,6 @@ unformat_checkpoint ()
     shift
     check_too_many_args "$@"
   fi
-  set_g09_variables
   unfchk "$input_checkpoint" "$output_checkpoint"
   joberror=$?
 }
@@ -271,58 +260,135 @@ load_bash ()
   joberror=$?
 }
 
-print_help ()
+#
+# Print some helping commands
+# The lines are distributed throughout the script and grepped for
+#
+
+helpme ()
 {
-cat <<- EOF
-$scriptname is a wrapper to access certain utilities from $gaussian09installname
+    local line
+    local pattern="^[[:space:]]*#hlp[[:space:]]?(.*)?$"
+    while read -r line; do
+      [[ "$line" =~ $pattern ]] && eval "echo \"${BASH_REMATCH[1]}\""
+    done < <(grep "#hlp" "$0")
+    exit 0
+}
 
-Usages:
+execute_command ()
+{
+    case "$1" in
+      "formchk" | "formcheck" ) 
+                 shift; format_checkpoint "$@" ;;
+      
+       "unfchk" | "unformcheck" ) 
+                 shift; unformat_checkpoint "$@" ;;
+      
+      "cubegen") shift; generate_cubefiles "$@" ;;
+      
+          "raw") shift; use_bare_wrapper "$@" ;;
+      
+         "bash") shift; load_bash "$@" ;;
+      
+              *) calculation "$@" ;;
+    esac
+}
 
-  $scriptname <inputfile>
-    When provided with and Gaussian inputfile, the wrapper will initialise
-    the Gaussian environment and perform a calculation.
-    (No sanity check of the file will be performed.)
+set_longoption ()
+{
+    if [[ -z $longoption ]] ; then
+      longoption="$1"
+    else
+      fatal "Specified switches are mutually exclusive."
+    fi
+}
 
-  $scriptname formchk [option] [<input>] [<output>]
-    Calls the G09 utility formchk with the default option -3 (see manual).
-    Possible values for option (exclusive): -3, -2, -c.
-    Input and output are optional arguments, if not present, they will be 
-    prompted for or guessed.
-    (The option 'formcheck' is a synonym for 'formchk'.)
-    (No sanity check of the file will be performed.)
+evaluate_options ()
+{
+    # Initialise options
+    local OPTIND="1"
+    
+    while getopts :m:fucrbh options ; do
+      #hlp Usages and options:
+      #hlp $scriptname [scriptoptions] commands (see below)
+      #hlp
+      #hlp Run a calculation:
+      #hlp   $scriptname <inputfile>
+      #hlp   When provided with and Gaussian inputfile, the wrapper will initialise
+      #hlp   the Gaussian environment and perform a calculation.
+      #hlp   (No sanity check of the file will be performed.)
+      #hlp
 
-  $scriptname unfchk [<input>] [<output>]
-    Calls the G09 utility unfchk (see manual).
-    Input and output are optional arguments, if not present, they will be
-    prompted for or guessed.
-    (The option 'unformcheck' is a synonym for 'unfchk'.)
-    (No sanity check of the file will be performed.)
+      case $options in
+        #hlp  Format a checkpointfile
+        #hlp    $scriptname ( -f | formchk | formcheck ) [option] [<input>] [<output>]
+        #hlp    Calls the G09 utility formchk with the default option -3 (see manual).
+        #hlp    Possible values for option (exclusive): -3, -2, -c.
+        #hlp    Input and output are optional arguments, if not present, they will be 
+        #hlp    prompted for or guessed.
+        #hlp    (No sanity check of the file will be performed.)
+        #hlp
+        f) set_longoption "formchk" ;;
 
-  $scriptname cubegen [parameters]
-    Calls the G09 utility cubegen (see manual).
-    No sanity check of parameters will be performend.
-    General syntax:
-      cubegen nprocs kind fchkfile cubefile npts format cubefile2
-    Example command:
-      $scriptname cubegen 1 MO=HOMO test.fchk test.cube 80 h
-      (Will use one process, writes the HOMO from test.fchk to test.cube
-       with 80 points per side of the cube including header.)
+        #hlp Create a binary checkpointfile:k
+        #hlp   $scriptname ( -u | unfchk | unformcheck ) [<input>] [<output>]
+        #hlp   Calls the G09 utility unfchk (see manual).
+        #hlp   Input and output are optional arguments, if not present, they will be
+        #hlp   prompted for or guessed.
+        #hlp   (No sanity check of the file will be performed.)
+        #hlp 
+        u) set_longoption "unfchk" ;;
 
-  $scriptname raw [command(s)]
-    This is the free-form option of the wrapper.
-    It can be used with any command(s), it only temporarily loads the g09 
-    environment. See the manual for more information.
+        #hlp Create a cube file:
+        #hlp   $scriptname ( -c | cubegen ) [parameters]
+        #hlp   Calls the G09 utility cubegen (see manual).
+        #hlp   No sanity check of parameters will be performend.
+        #hlp   General syntax:
+        #hlp     cubegen nprocs kind fchkfile cubefile npts format cubefile2
+        #hlp   Example command:
+        #hlp     $scriptname cubegen 1 MO=HOMO test.fchk test.cube 80 h
+        #hlp     (Will use one process, writes the HOMO from test.fchk to test.cube
+        #hlp      with 80 points per side of the cube including header.)
+        #hlp
+        c) set_longoption "cubegen" ;;
 
-  $scriptname bash
-    Loads the environment settings and then opens a bash subshell.
-    You can pretty much run any command with that. 
+        #hlp Execute custom commands:
+        #hlp   $scriptname ( -r | raw ) [command(s)]
+        #hlp   This is the free-form option of the wrapper.
+        #hlp   It can be used with any command(s), it only temporarily loads the g09 
+        #hlp   environment. See the Gaussian manual for more information.
+        #hlp
+        r) set_longoption "raw" ;;
 
-This 'software' comes with absolutely no warrenty. None. Nada. 
+        #hlp Load bash session:
+        #hlp   $scriptname ( -b | bash )
+        #hlp   Loads the environment settings and then opens a bash subshell.
+        #hlp   You can pretty much run any command with that. 
+        #hlp
+        b) set_longoption "bash" ;;
 
-(Martin; $version; $versiondate.)
-EOF
+        #hlp Scriptoptions:
+        #hlp   -m <ARG>  Set memory. (work in progress)
+        #hlp
+        m) message "Sets memory $OPTARG" ;;
 
-exit 0
+        #hlp   -p <ARG>  Set processes. (work in progress)
+        #hlp 
+        p) message "Sets processes $OPTARG" ;;
+
+        #hlp   -h        Prints this help text
+        #hlp
+        h) helpme ;; 
+    
+       \?) fatal "Invalid option: -$OPTARG." ;;
+    
+        :) fatal "Option -$OPTARG requires an argument." ;;
+    
+      esac
+    done
+
+    shift $(( OPTIND - 1 ))
+    commandline=($longoption "$@")
 }
 
 #
@@ -330,32 +396,16 @@ exit 0
 #
 
 check_if_gaussian_is_sourced
+longoption=""
 
-# Implement to set memory via GAUSS_MEMDEF
+evaluate_options "$@"
+(( ${#commandline[@]} == 0 )) && helpme
+execute_command "${commandline[@]}"
 
-case "$1" in
-  # If no input, print short message.
-              "") message "Use '$scriptname help' to get a brief overview."
-                  fatal   "Please specify an input file or command." ;;
-     
-       "formchk" | "formcheck" ) 
-                  shift; format_checkpoint "$@" ;;
-     
-        "unfchk" | "unformcheck" ) 
-                  shift; unformat_checkpoint "$@" ;;
-     
-       "cubegen") shift; generate_cubefiles "$@" ;;
-     
-           "raw") shift; use_bare_wrapper "$@" ;;
-      
-          "bash") shift; load_bash "$@" ;;
-     
-   "-h" | "help") print_help ;;
-     
-               *) calculation "$@" ;;
-esac
-
-message "$scriptname completed."
+#hlp (Martin; $version; $versiondate.)
+message "$scriptname is part of tools-for-g09.bash $version ($versiondate)"
 # If the programs fail, the exit status of the script should reflect that.
 exit $joberror
+
+
 

@@ -1,11 +1,14 @@
 #!/bin/bash
-# Script can be used to parse one (or more) frequency calculation(s)
-# of the quantum chemical software suite Gaussian09
+#hlp This tool creates a summary for a single (or more) frequency calculation(s)
+#hlp of the quantum chemical software suite Gaussian09.
+#hlp It will, however, not fail if it is not one. 
+#hlp It looks for a defined set of keywords and writes them to the screen.
+
 # See also http://codereview.stackexchange.com/q/131666/92423
 # 
 # This was last updated with 
-version="0.1.2"
-versiondate="2017-12-19"
+version="0.1.5"
+versiondate="2018-01-20"
 # of tools-for-g09.bash
 
 scriptname=${0##*\/} # Remove trailing path
@@ -36,10 +39,25 @@ message ()
     echo "INFO   : " "$@"
 }
 
-warn ()
+warning ()
 {
     echo "WARNING: " "$@"
 } 
+
+#
+# Print some helping commands
+# The lines are distributed throughout the script and grepped for
+#
+
+helpme ()
+{
+    local line
+    local pattern="^[[:space:]]*#hlp[[:space:]]?(.*)?$"
+    while read -r line; do
+      [[ "$line" =~ $pattern ]] && eval "echo \"${BASH_REMATCH[1]}\""
+    done < <(grep "#hlp" "$0")
+    exit 0
+}
 
 # Usage and help
 usage ()
@@ -48,43 +66,6 @@ usage ()
     message "Options may be -v -V{0,1,2,3} -c"
     message "Use -h to display a longer help message."
     exit 0
-}
-
-helpme ()
-{
-cat << EOF
-This script is part of the tools-for-g09 bundle.
-  https://github.com/polyluxus/tools-for-g09
-
-This tool creates a summary for a single (or more) frequency calculation(s). It will, 
-however, not fail if it is not one. In principle it looks for a defined 
-set of keywords and writes them to the screen.
-
-Usage  : $scriptname [options] filenames(s)
-
-Options:
-         -v 
-            incrementally increase verbosity 
-         -V [ARG]
-            set level of verbosity directly, ARG may be
-            0: (default) display a single line of most important values
-            1: display a short table of most important values (equal to -v)
-            2: like 1, also repeats the route section (equal to -vv)
-            3: like 2, also includes the decomposition of the entropy, thermal
-               energy and heat capacity into electronic, translational, 
-               rotational, and vibrational contributions (equal to -vvv)
-            If this option is found, -v will be ignored.
-         -c
-            like -V0 but the values are comma separated
-         -u 
-            display short usage message
-         -h 
-            display this help
-
-See also http://codereview.stackexchange.com/q/131666/92423
-(Martin; $version; $versiondate)
-EOF
-exit 0
 }
 
 # Parse the commands that have been passed to Gaussian09
@@ -114,9 +95,9 @@ testRouteSec ()
     local testRouteSection="$1"
     local patternOpt="([oO][pP][tT][^[:space:]]*)([[:space:]]|$)"
     if [[ $testRouteSection =~ $patternOpt ]]; then
-        warn "This appears to be an optimisation."
-        warn "Found '${BASH_REMATCH[1]}' in the route section."
-        warn "The script is not intended for creating a summary of an optimisation."
+        warning "This appears to be an optimisation."
+        warning "Found '${BASH_REMATCH[1]}' in the route section."
+        warning "The script is not intended for creating a summary of an optimisation."
         isOptimisation=1
     fi
     local patternFreq="([Ff][Rr][Ee][Qq][^[:space:]]*)([[:space:]]|$)"
@@ -296,7 +277,7 @@ getThermochemistry ()
 
 getAllEnergies ()
 {
-    getElecEnergy "$1" || warn "Unable to find electronic energy."
+    getElecEnergy "$1" || warning "Unable to find electronic energy."
     (( isFreqCalc == 1 )) && getThermochemistry "$1"
     (( isFreqCalc == 1 )) && getEntropy "$1"
 }
@@ -391,33 +372,51 @@ analyseLog ()
 }
 
 # Start main script
-# If the used locale is not English, the formatting of floating numbers of the 
-# printf commands will produce an error
-if [[ ! "$LANG" == "en_US.utf8" ]]; then 
-    warn "Formatting might not properly work for '$LANG'."
-    warn "Setting locale for this script."
-    set -x
-        export LC_NUMERIC="en_US.utf8"
-    set +x
-fi
 
 # Evaluate options
 while getopts :vcV:hu options ; do
+  #hlp Usage  : $scriptname [options] filenames(s)
+  #hlp 
+  #hlp Options:
     case $options in
+        #hlp   -v         incrementally increase verbosity 
         v) [[ $ignorePrintlevelSwitch == 1 ]] || ((printlevel++)) ;;
-        c) printlevel="c" ;;
+
+        #hlp   -V [ARG]   set level of verbosity directly, ARG may be
+        #hlp                0: (default) display a single line of most important values
+        #hlp                1: display a short table of most important values (equal to -v)
+        #hlp                2: like 1, also repeats the route section (equal to -vv)
+        #hlp                3: like 2, also includes the decomposition of the entropy, thermal
+        #hlp                   energy and heat capacity into electronic, translational, 
+        #hlp                   rotational, and vibrational contributions (equal to -vvv)
+        #hlp                If this option is found, -v will be ignored.
         V) if [[ $OPTARG =~ ^[0-9]{1}$ ]]; then
                printlevel="$OPTARG" 
                ignorePrintlevelSwitch=1
            else
                fatal "Invalid argument: $OPTARG"
            fi ;;
-        h) helpme ;;
+
+        #hlp   -c         like -V0 but the values are comma separated
+        c) printlevel="c" ;;
+
+        #hlp   -u         display short usage message
         u) usage ;;
-       \?) warn "Invalid option: -$OPTARG." ;;
+
+        #hlp   -h         display this help
+        h) helpme ;;
+
+       \?) warning "Invalid option: -$OPTARG." ;;
+        
         :) fatal "Option -$OPTARG requires an argument." ;;
     esac
 done
+#hlp 
+#hlp This script is part of the tools-for-g09 bundle.
+#hlp   https://github.com/polyluxus/tools-for-g09.bash
+#hlp 
+#hlp See also http://codereview.stackexchange.com/q/131666/92423
+
 shift $((OPTIND-1))
 
 # Check if filename is specified
@@ -425,11 +424,21 @@ if [[ $# == 0 ]]; then
     fatal "No output file specified. Nothing to do. Try $scriptname -h for more information."
 fi
 
+# If the used locale is not English, the formatting of floating numbers of the 
+# printf commands will produce an error
+if [[ ! "$LANG" == "en_US.utf8" ]]; then 
+    warning "Formatting might not properly work for '$LANG'."
+    warning "Setting locale for this script."
+    set -x
+        export LC_NUMERIC="en_US.utf8"
+    set +x
+fi
+
 # Assume all other commandline arguments are filenames
 while [[ ! -z "$1" ]]; do
     filename="$1"
     if [[ ! -e "$filename" ]]; then 
-        warn "Specified logfile '$filename' does not exist. Continue."
+        warning "Specified logfile '$filename' does not exist. Continue."
         ((errCount++))
     else
         analyseLog "$filename"
@@ -443,3 +452,5 @@ if (( "$errCount" > 0 )); then
     fatal "There have been one or more errors reading the specified files."
 fi
 
+#hlp (Martin; $version; $versiondate.)
+message "$scriptname is part of tools-for-g09.bash $version ($versiondate)"
