@@ -67,6 +67,40 @@ fatal ()
     exit 1
 }
 
+#
+# Test if a given value is an integer
+#
+
+is_integer()
+{
+    [[ $1 =~ ^[[:digit:]]+$ ]]
+}
+
+validate_integer () 
+{
+    if ! is_integer "$1"; then
+        [ ! -z "$2" ] && fatal "Value for $2 ($1) is no integer."
+          [ -z "$2" ] && fatal "Value '$1' is no integer."
+    fi
+}
+
+test_and_set_processes ()
+{
+    requested_processes="$1"
+    validate_integer "$requested_processes" "requested processes"
+}
+
+test_and_set_memory ()
+{
+    local test_memory="$1"
+    local memory_pattern="^([[:digit:]]+)([Bb]|[Kk][Bb]|[Mm][Bb]|[Gg][Bb]|[Mm][Ww])?$"
+    if [[ $test_memory =~ $memory_pattern ]] ; then
+      requested_memory="${BASH_REMATCH[0]}"
+    else
+      fatal "Unrecognised input format for memory: $test_memory"
+    fi
+}
+
 # Create a scratch directory for temporary files
 make_scratch ()
 {
@@ -84,7 +118,11 @@ set_g09_variables ()
   g09root="$gaussian09installpath"
   message "Using $g09root"
   GAUSS_SCRDIR="$gaussian09subscratch"
-  export g09root GAUSS_SCRDIR
+  GAUSS_MEMDEF="$requested_memory"
+  GAUSS_MDEF="$requested_memory"
+  GAUSS_PDEF="$requested_processes"
+  message "Setting memory to '$requested_memory' and processes to '$requested_processes'."
+  export g09root GAUSS_SCRDIR GAUSS_MEMDEF GAUSS_MDEF GAUSS_PDEF
   . "$g09root/g09/bsd/g09.profile"
   if [[ ! -z "$nbo06bininstallpath" ]] ; then
     nbo6bin="$nbo06bininstallpath"
@@ -162,6 +200,7 @@ calculation ()
   indent "Start calculation at "
   date
   g09 "$inputfile"
+  #g09 -m="$requested_memory" -p="$requested_processes" "$inputfile"
   joberror=$?
   indent "End   calculation at "
   date
@@ -308,7 +347,7 @@ evaluate_options ()
     # Initialise options
     local OPTIND="1"
     
-    while getopts :m:fucrbh options ; do
+    while getopts :fucrbm:p:h options ; do
       #hlp Usages and options:
       #hlp $scriptname [scriptoptions] commands (see below)
       #hlp
@@ -368,13 +407,19 @@ evaluate_options ()
         b) set_longoption "bash" ;;
 
         #hlp Scriptoptions:
-        #hlp   -m <ARG>  Set memory. (work in progress)
+        #hlp   -m <ARG>  Set memory variables GAUSS_MEMDEF and GAUSS_MDEF.
+        #hlp             The argument is taken to be in words, but can be modified
+        #hlp             with the following units the script understands: b, kb, mb, gb, mw
+        #hlp             The default setting is '$requested_memory'.
+        #hlp             (Depending on the utility this might have no effect.)
         #hlp
-        m) message "Sets memory $OPTARG" ;;
+        m) test_and_set_memory "$OPTARG" ;;
 
-        #hlp   -p <ARG>  Set processes. (work in progress)
+        #hlp   -p <ARG>  Set processes variable GAUSS_PDEF.
+        #hlp             The argument has to be an integer, '$requested_processes' is the default.
+        #hlp             (Depending on the utility this might have no effect.)
         #hlp 
-        p) message "Sets processes $OPTARG" ;;
+        p) test_and_set_processes "$OPTARG" ;;
 
         #hlp   -h        Prints this help text
         #hlp
@@ -396,7 +441,12 @@ evaluate_options ()
 #
 
 check_if_gaussian_is_sourced
+
+# Set some defaults
 longoption=""
+requested_memory="4GB"
+requested_processes="1"
+declare -a commandline
 
 evaluate_options "$@"
 (( ${#commandline[@]} == 0 )) && helpme
