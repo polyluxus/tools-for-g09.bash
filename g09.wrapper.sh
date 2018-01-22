@@ -25,8 +25,8 @@ nbo06bininstallpath="/home/chemsoft/nbo6/nbo6-2016-01-16/bin"
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
  
-version="0.1.5"
-versiondate="2018-01-20"
+version="0.1.6"
+versiondate="2018-01-22"
 
 #
 # Avoid conflicts if another Gaussian version is already sourced
@@ -84,6 +84,10 @@ validate_integer ()
     fi
 }
 
+#
+# Script options memory and processes
+#
+
 test_and_set_processes ()
 {
     requested_processes="$1"
@@ -93,7 +97,8 @@ test_and_set_processes ()
 test_and_set_memory ()
 {
     local test_memory="$1"
-    local memory_pattern="^([[:digit:]]+)([Bb]|[Kk][Bb]|[Mm][Bb]|[Gg][Bb]|[Mm][Ww])?$"
+    # Gaussian undestands words (no unit) and KB, MB, GB, TB, KW, MW, GW or TW
+    local memory_pattern="^([[:digit:]]+)([KkMmGgTt][Bb]|[MmGgTt][Ww])?$"
     if [[ $test_memory =~ $memory_pattern ]] ; then
       requested_memory="${BASH_REMATCH[0]}"
     else
@@ -101,7 +106,10 @@ test_and_set_memory ()
     fi
 }
 
+#
 # Create a scratch directory for temporary files
+#
+
 make_scratch ()
 {
   message "Creating new scratch directory."
@@ -110,23 +118,30 @@ make_scratch ()
   mkdir -v "$gaussian09subscratch" || fatal "Cannot create temporary scratch directory."
 }
 
+#
 # Set environment variables, so that the program can be found
-# This routine needs to be adjusted based on the actual path locations
+#
+
 set_g09_variables ()
 {
   message "Initialising Gaussian 09."
   g09root="$gaussian09installpath"
-  message "Using $g09root"
-  GAUSS_SCRDIR="$gaussian09subscratch"
+  message "Using G09: $g09root"
+  if [[ -z $gaussian09subscratch ]] ; then
+    GAUSS_SCRDIR="$gaussian09basescratch"
+  else
+    GAUSS_SCRDIR="$gaussian09subscratch"
+  fi
+  message "Setting scratch directory: $GAUSS_SCRDIR"
   GAUSS_MEMDEF="$requested_memory"
   GAUSS_MDEF="$requested_memory"
   GAUSS_PDEF="$requested_processes"
-  message "Setting memory to '$requested_memory' and processes to '$requested_processes'."
+  message "Setting memory to '$GAUSS_MEMDEF' and processes to '$GAUSS_PDEF'."
   export g09root GAUSS_SCRDIR GAUSS_MEMDEF GAUSS_MDEF GAUSS_PDEF
   . "$g09root/g09/bsd/g09.profile"
   if [[ ! -z "$nbo06bininstallpath" ]] ; then
     nbo6bin="$nbo06bininstallpath"
-    message "Using NBO6 $nbo6bin"
+    message "Using NBO6: $nbo6bin"
     export PATH="$PATH:$nbo6bin"
   fi
 }
@@ -135,26 +150,34 @@ set_g09_variables ()
 # delete scratch directory
 clean_up()
 {
+  local cleanup_error=0 file skipdelete="false"
   #Cleanup
   if [[ -d "$gaussian09subscratch" ]]; then
-    cd "$gaussian09subscratch" || fatal "Cannot enter temporary scratch directory."
-    for file in *; do
-      if [[ -e $file ]]; then
-        if [[ -s $file ]]; then
-          message "$file does exist and its filesize is greater than zero."
-          local skipdelete="true"
-        else
-          message "$file does exist but its filesize is zero. It will be deleted."
-          indent "  "
-          rm -v "$file"
+    # fix aborting!
+    cd "$gaussian09subscratch" || cleanup_error="1"
+    if (( cleanup_error > 0 )); then
+      warning "Cannot enter temporary scratch directory."
+    else
+      message "Cleaning $(pwd)"
+      for file in *; do
+        if [[ -e $file ]]; then
+          if [[ -s $file ]]; then
+            warning "File '$file' has non-zero filesize, it will be retained."
+            skipdelete="true"
+            (( cleanup_error++ ))
+          else
+            message "File '$file' exists, but filesize is zero, it will be deleted."
+            indent "  "
+            rm -v "$file" || (( cleanup_error++ ))
+          fi
         fi
-      fi
-    done
+      done
+    fi
     cd - > /dev/null
     if [[ ! "$skipdelete" == "true" ]]; then
       message "Removing scratch directory."
       indent "  "
-      rmdir -v "$gaussian09subscratch"
+      rmdir -v "$gaussian09subscratch" || (( cleanup_error++ ))
     else
       message "One or more auxiliary files are still left in the temporary scratch directory."
       message "To recover these files issue:"
@@ -163,13 +186,15 @@ clean_up()
       message "  rm -rvf $gaussian09subscratch"
     fi
   fi
+  (( cleanup_error > 0 )) && warning "There have been one or more errors. Cleanup procedure failed."
+  return "$cleanup_error"
 }
 
 # Issue warnings if user input is ignored
 check_too_many_args ()
 {
   while [[ ! -z $1 ]]; do
-    warning "$1 will be ignored."
+    warning "Commandlie argument '$1' will be ignored."
     shift
   done
 }
@@ -187,25 +212,25 @@ check_file ()
 # Perform a calculation
 calculation ()
 {
-  check_file "$1" || fatal "$1 does not exist." 
+  local inputfile="$1"
+  shift
+  
+  check_file "$inputfile" || fatal "Inputfile '$inputfile' does not exist." 
+  check_too_many_args "$@"
   
   make_scratch
   set_g09_variables
   
-  inputfile="$1"
-  shift
-  
-  check_too_many_args "$@"
-  
   indent "Start calculation at "
   date
   g09 "$inputfile"
-  #g09 -m="$requested_memory" -p="$requested_processes" "$inputfile"
+  # Alternative way of letting Gaussian set the environment variables:
+  # g09 -m="$requested_memory" -p="$requested_processes" "$inputfile"
   joberror=$?
   indent "End   calculation at "
   date
   
-  clean_up
+  clean_up 
 }
 
 # Produce a formatted checkpointfile
@@ -232,9 +257,10 @@ format_checkpoint ()
     return
   fi 
 
-  check_file "$1" || fatal "$1 does not exist."
-  input_checkpoint="$1" 
+  local input_checkpoint="$1" 
+  local output_checkpoint
   shift
+  check_file "$input_checkpoint" || fatal "Checkpointfile '$input_checkpoint' does not exist."
 
   if [[ -z $1 ]] ; then
     output_checkpoint="${input_checkpoint%.chk}.fchk"
@@ -256,9 +282,10 @@ unformat_checkpoint ()
     joberror=$?
     return
   fi 
-  check_file "$1" || fatal "$1 does not exist."
-  input_checkpoint="$1" 
+  local input_checkpoint="$1" 
+  local output_checkpoint
   shift
+  check_file "$input_checkpoint" || fatal "Formatted checkpointfile '$input_checkpoint' does not exist."
   if [[ -z $1 ]]; then
     output_checkpoint="${input_checkpoint%.fchk}.chk"
   else
@@ -314,7 +341,7 @@ helpme ()
     exit 0
 }
 
-execute_command ()
+execute_commandline ()
 {
     case "$1" in
       "formchk" | "formcheck" ) 
@@ -338,7 +365,7 @@ set_longoption ()
     if [[ -z $longoption ]] ; then
       longoption="$1"
     else
-      fatal "Specified switches are mutually exclusive."
+      fatal "Specified commands '$longoption' and '$1' are mutually exclusive."
     fi
 }
 
@@ -447,15 +474,16 @@ longoption=""
 requested_memory="4GB"
 requested_processes="1"
 declare -a commandline
+joberror=0
 
 evaluate_options "$@"
 (( ${#commandline[@]} == 0 )) && helpme
-execute_command "${commandline[@]}"
+execute_commandline "${commandline[@]}"
 
-#hlp (Martin; $version; $versiondate.)
 message "$scriptname is part of tools-for-g09.bash $version ($versiondate)"
 # If the programs fail, the exit status of the script should reflect that.
+#hlp Exit status is zero if everything went fine.
+#hlp In other cases it reflects the exit status of the utility.
+#hlp
 exit $joberror
-
-
-
+#hlp (Martin; $version; $versiondate)

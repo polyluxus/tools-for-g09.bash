@@ -1,4 +1,4 @@
-%chk=ammonia.pbe.chk
+%chk=ammonia.pbesvp.chk
 %nproc=2
 %mem=8000MB
 #P PBEPBE/def2SVP/W06
