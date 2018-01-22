@@ -24,7 +24,7 @@ of the scripts, it is entirely your resonsibility. :D
 
 Thank you for your interest.
 
----
+## Utilities
 
 Short overview and introduction of the bundle scripts and files.
 The scripts come with a `-h` option for a short description, that should
@@ -94,10 +94,12 @@ General usage:
 ```
   g09.wrapper [scriptoptions] commands
 ```
-Scriptoptions can be used to set memory requirements `-m` or processes `-p` 
-(currently work in progress).
+Scriptoptions can be used to set memory requirements `-m` or processes `-p`.
 Depending on the command used these may or may not have an effect.
-Use the `-h` switch to get more information.
+The switches simply set the environment variables `GAUSS_MEMDEF`, `GAUSS_MDEF`,
+and `GAUSS_PDEF`. Use the `-h` switch to get more information.  
+If these values are otherwise specified (like in a Link 0 command), 
+Gaussian will overwrite the environment settings.
 
 The following shortcuts have been implemented.
 ```
@@ -181,4 +183,4 @@ and testing. Mainly the files I have used to test the scripts.
 
 more tools in preparation (?)
 
-(Martin; 0.1.5; 2018-01-20)
+(Martin; 0.1.6; 2018-01-22)
