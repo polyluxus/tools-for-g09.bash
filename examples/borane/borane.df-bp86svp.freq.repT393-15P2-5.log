@@ -1,0 +1,334 @@
+ Entering Gaussian System, Link 0=g09
+ Input=borane.df-bp86svp.freq.repT393-15P2-5.com
+ Output=borane.df-bp86svp.freq.repT393-15P2-5.log
+ Initial command:
+ /home/chemsoft/gaussian/g09e01/g09/l1.exe "/scr/martin/g09job.inter1516698358/Gau-19347.inp" -scrdir="/scr/martin/g09job.inter1516698358/"
+ Entering Link 1 = /home/chemsoft/gaussian/g09e01/g09/l1.exe PID=     19348.
+  
+ Copyright (c) 1988,1990,1992,1993,1995,1998,2003,2009,2015,
+            Gaussian, Inc.  All Rights Reserved.
+  
+ This is part of the Gaussian(R) 09 program.  It is based on
+ the Gaussian(R) 03 system (copyright 2003, Gaussian, Inc.),
+ the Gaussian(R) 98 system (copyright 1998, Gaussian, Inc.),
+ the Gaussian(R) 94 system (copyright 1995, Gaussian, Inc.),
+ the Gaussian 92(TM) system (copyright 1992, Gaussian, Inc.),
+ the Gaussian 90(TM) system (copyright 1990, Gaussian, Inc.),
+ the Gaussian 88(TM) system (copyright 1988, Gaussian, Inc.),
+ the Gaussian 86(TM) system (copyright 1986, Carnegie Mellon
+ University), and the Gaussian 82(TM) system (copyright 1983,
+ Carnegie Mellon University). Gaussian is a federally registered
+ trademark of Gaussian, Inc.
+  
+ This software contains proprietary and confidential information,
+ including trade secrets, belonging to Gaussian, Inc.
+  
+ This software is provided under written license and may be
+ used, copied, transmitted, or stored only in accord with that
+ written license.
+  
+ The following legend is applicable only to US Government
+ contracts under FAR:
+  
+                    RESTRICTED RIGHTS LEGEND
+  
+ Use, reproduction and disclosure by the US Government is
+ subject to restrictions as set forth in subparagraphs (a)
+ and (c) of the Commercial Computer Software - Restricted
+ Rights clause in FAR 52.227-19.
+  
+ Gaussian, Inc.
+ 340 Quinnipiac St., Bldg. 40, Wallingford CT 06492
+  
+  
+ ---------------------------------------------------------------
+ Warning -- This program may not be used in any manner that
+ competes with the business of Gaussian, Inc. or will provide
+ assistance to any competitor of Gaussian, Inc.  The licensee
+ of this program is prohibited from giving any competitor of
+ Gaussian, Inc. access to this program.  By using this program,
+ the user acknowledges that Gaussian, Inc. is engaged in the
+ business of creating and licensing software in the field of
+ computational chemistry and represents and warrants to the
+ licensee that it is not a competitor of Gaussian, Inc. and that
+ it will not use this program in any manner prohibited above.
+ ---------------------------------------------------------------
+  
+
+ Cite this work as:
+ Gaussian 09, Revision E.01,
+ M. J. Frisch, G. W. Trucks, H. B. Schlegel, G. E. Scuseria, 
+ M. A. Robb, J. R. Cheeseman, G. Scalmani, V. Barone, B. Mennucci, 
+ G. A. Petersson, H. Nakatsuji, M. Caricato, X. Li, H. P. Hratchian, 
+ A. F. Izmaylov, J. Bloino, G. Zheng, J. L. Sonnenberg, M. Hada, 
+ M. Ehara, K. Toyota, R. Fukuda, J. Hasegawa, M. Ishida, T. Nakajima, 
+ Y. Honda, O. Kitao, H. Nakai, T. Vreven, J. A. Montgomery, Jr., 
+ J. E. Peralta, F. Ogliaro, M. Bearpark, J. J. Heyd, E. Brothers, 
+ K. N. Kudin, V. N. Staroverov, T. Keith, R. Kobayashi, J. Normand, 
+ K. Raghavachari, A. Rendell, J. C. Burant, S. S. Iyengar, J. Tomasi, 
+ M. Cossi, N. Rega, J. M. Millam, M. Klene, J. E. Knox, J. B. Cross, 
+ V. Bakken, C. Adamo, J. Jaramillo, R. Gomperts, R. E. Stratmann, 
+ O. Yazyev, A. J. Austin, R. Cammi, C. Pomelli, J. W. Ochterski, 
+ R. L. Martin, K. Morokuma, V. G. Zakrzewski, G. A. Voth, 
+ P. Salvador, J. J. Dannenberg, S. Dapprich, A. D. Daniels, 
+ O. Farkas, J. B. Foresman, J. V. Ortiz, J. Cioslowski, 
+ and D. J. Fox, Gaussian, Inc., Wallingford CT, 2013.
+ 
+ ******************************************
+ Gaussian 09:  ES64L-G09RevE.01 30-Nov-2015
+                23-Jan-2018 
+ ******************************************
+ %oldchk=borane.df-bp86svp.freq.T393-15P1-5.chk
+ %chk=borane.df-bp86svp.freq.T393-15P1-5.repT393-15P2-5.chk
+ %NoSave
+ Copying data from "borane.df-bp86svp.freq.T393-15P1-5.chk" to current chk file "borane.df-bp86svp.freq.T393-15P1-5.repT3
+ 93-15P2-5.chk".
+ ----------------------------------------------------------------------
+ #P BP86/def2SVP/W06 DenFit scf(xqc,MaxConventionalCycle=500) int(ultra
+ finegrid) gfinput gfoldprint iop(6/7=3) symmetry(loose) geom(check) gu
+ ess(read) freq(ReadFC) Temperature=393.15 Pressure=2.5
+ ----------------------------------------------------------------------
+ 1/29=2,38=1,112=393150,113=2500/1;
+ 2/12=2,17=4,18=3,40=1/2;
+ 7/8=1,25=11/16;
+ 99/5=2/99;
+ Leave Link    1 at Tue Jan 23 18:05:58 2018, MaxMem=   536870912 cpu:         0.2
+ (Enter /home/chemsoft/gaussian/g09e01/g09/l101.exe)
+ -----------------------
+ Borane DF-BP86/def2-SVP
+ -----------------------
+ Structure from the checkpoint file:  "borane.df-bp86svp.freq.T393-15P1-5.repT393-15P2-5.chk"
+ Charge =  0 Multiplicity = 1
+ Redundant internal coordinates found in file.
+ B,0,0.,0.0000000007,0.
+ H,0,0.0000000012,1.2141511249,0.
+ H,0,-1.0514857182,-0.6070755605,0.
+ H,0,1.051485717,-0.6070755625,0.
+ Recover connectivity data from disk.
+ NAtoms=      4 NQM=        4 NQMF=       0 NMMI=      0 NMMIF=      0
+                NMic=       0 NMicF=      0.
+                    Isotopes and Nuclear Properties:
+ (Nuclear quadrupole moments (NQMom) in fm**2, nuclear magnetic moments (NMagM)
+  in nuclear magnetons)
+
+  Atom         1           2           3           4
+ IAtWgt=          11           1           1           1
+ AtmWgt=  11.0093053   1.0078250   1.0078250   1.0078250
+ NucSpn=           3           1           1           1
+ AtZEff=  -2.7500000  -1.0000000  -1.0000000  -1.0000000
+ NQMom=    4.0590000   0.0000000   0.0000000   0.0000000
+ NMagM=    2.6886370   2.7928460   2.7928460   2.7928460
+ AtZNuc=   5.0000000   1.0000000   1.0000000   1.0000000
+ Leave Link  101 at Tue Jan 23 18:05:58 2018, MaxMem=   536870912 cpu:         0.4
+ (Enter /home/chemsoft/gaussian/g09e01/g09/l202.exe)
+                          Input orientation:                          
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          5           0        0.000000    0.000000   -0.000000
+      2          1           0        0.000000    1.214151   -0.000000
+      3          1           0       -1.051486   -0.607076   -0.000000
+      4          1           0        1.051486   -0.607076   -0.000000
+ ---------------------------------------------------------------------
+                    Distance matrix (angstroms):
+                    1          2          3          4
+     1  B    0.000000
+     2  H    1.214151   0.000000
+     3  H    1.214151   2.102971   0.000000
+     4  H    1.214151   2.102971   2.102971   0.000000
+ Stoichiometry    BH3
+ Framework group  D3H[O(B),3C2(H)]
+ Deg. of freedom     1
+ Full point group                 D3H     NOp  12
+ RotChk:  IX=0 Diff= 6.51D-16
+ Largest Abelian subgroup         C2V     NOp   4
+ Largest concise Abelian subgroup C2      NOp   2
+                         Standard orientation:                         
+ ---------------------------------------------------------------------
+ Center     Atomic      Atomic             Coordinates (Angstroms)
+ Number     Number       Type             X           Y           Z
+ ---------------------------------------------------------------------
+      1          5           0        0.000000    0.000000    0.000000
+      2          1           0        0.000000    1.214151    0.000000
+      3          1           0        1.051486   -0.607076    0.000000
+      4          1           0       -1.051486   -0.607076    0.000000
+ ---------------------------------------------------------------------
+ Rotational constants (GHZ):    226.7750649    226.7750649    113.3875324
+ Leave Link  202 at Tue Jan 23 18:05:58 2018, MaxMem=   536870912 cpu:         0.0
+ (Enter /home/chemsoft/gaussian/g09e01/g09/l716.exe)
+ Electric field and nuclear coordinate derivatives read from checkpoint file.
+ Rotating derivatives to standard orientation.
+ Dipole        =-2.72947897D-15 3.90854883D-17 3.34292928D-31
+ Polarizability= 1.79434760D+01-1.53698293D-13 1.79431191D+01
+                -1.01974997D-15-2.93679010D-12 9.47175348D+00
+ Full mass-weighted force constant matrix:
+ Low frequencies ---   -7.3447   -7.3375   -0.1734    0.0003    0.3244    0.6026
+ Low frequencies --- 1108.2190 1136.2325 1136.2332
+ Diagonal vibrational polarizability:
+        0.6987040       0.6987515       1.6390998
+ Harmonic frequencies (cm**-1), IR intensities (KM/Mole), Raman scattering
+ activities (A**4/AMU), depolarization ratios for plane and unpolarized
+ incident light, reduced masses (AMU), force constants (mDyne/A),
+ and normal coordinates:
+                      1                      2                      3
+                     A2"                    E'                     E'
+ Frequencies --   1108.2190              1136.2325              1136.2332
+ Red. masses --      1.2531                 1.1068                 1.1068
+ Frc consts  --      0.9067                 0.8419                 0.8419
+ IR Inten    --     74.8038                10.1687                10.1697
+  Atom  AN      X      Y      Z        X      Y      Z        X      Y      Z
+     1   5    -0.00   0.00  -0.16    -0.10   0.00   0.00    -0.00  -0.10  -0.00
+     2   1     0.00   0.00   0.57     0.81   0.00  -0.00     0.00  -0.08   0.00
+     3   1     0.00  -0.00   0.57     0.14   0.39  -0.00     0.39   0.59   0.00
+     4   1    -0.00  -0.00   0.57     0.14  -0.39  -0.00    -0.39   0.59   0.00
+                      4                      5                      6
+                     A1'                    E'                     E'
+ Frequencies --   2476.4702              2626.5242              2626.5249
+ Red. masses --      1.0078                 1.1277                 1.1277
+ Frc consts  --      3.6417                 4.5836                 4.5836
+ IR Inten    --      0.0000               124.7745               124.7817
+  Atom  AN      X      Y      Z        X      Y      Z        X      Y      Z
+     1   5    -0.00  -0.00   0.00    -0.11   0.00   0.00    -0.00  -0.11  -0.00
+     2   1    -0.00   0.58  -0.00    -0.01  -0.00  -0.00    -0.00   0.81   0.00
+     3   1     0.50  -0.29  -0.00     0.61  -0.36  -0.00    -0.36   0.19   0.00
+     4   1    -0.50  -0.29  -0.00     0.61   0.36  -0.00     0.36   0.19   0.00
+
+ -------------------
+ - Thermochemistry -
+ -------------------
+ Temperature   393.150 Kelvin.  Pressure   2.50000 Atm.
+ Atom     1 has atomic number  5 and mass  11.00931
+ Atom     2 has atomic number  1 and mass   1.00783
+ Atom     3 has atomic number  1 and mass   1.00783
+ Atom     4 has atomic number  1 and mass   1.00783
+ Molecular mass:    14.03278 amu.
+ Principal axes and moments of inertia in atomic units:
+                           1         2         3
+     Eigenvalues --     7.95829   7.95829  15.91658
+           X           -0.44721   0.89443   0.00000
+           Y            0.89443   0.44721   0.00000
+           Z           -0.00000   0.00000   1.00000
+ This molecule is an oblate symmetric top.
+ Rotational symmetry number  6.
+ Rotational temperatures (Kelvin)     10.88347    10.88347     5.44174
+ Rotational constants (GHZ):         226.77506   226.77506   113.38753
+ Zero-point vibrational energy      66453.8 (Joules/Mol)
+                                   15.88283 (Kcal/Mol)
+ Vibrational temperatures:   1594.48  1634.78  1634.78  3563.08  3778.98
+          (Kelvin)           3778.98
+ 
+ Zero-point correction=                           0.025311 (Hartree/Particle)
+ Thermal correction to Energy=                    0.029302
+ Thermal correction to Enthalpy=                  0.030547
+ Thermal correction to Gibbs Free Energy=         0.001813
+ Sum of electronic and zero-point Energies=            -26.548511
+ Sum of electronic and thermal Energies=               -26.544520
+ Sum of electronic and thermal Enthalpies=             -26.543275
+ Sum of electronic and thermal Free Energies=          -26.572009
+ 
+                     E (Thermal)             CV                S
+                      KCal/Mol        Cal/Mol-Kelvin    Cal/Mol-Kelvin
+ Total                   18.388              7.700             45.863
+ Electronic               0.000              0.000              0.000
+ Translational            1.172              2.981             33.418
+ Rotational               1.172              2.981             11.938
+ Vibrational             16.044              1.739              0.507
+                       Q            Log10(Q)             Ln(Q)
+ Total Bot       0.233110D+00         -0.632438         -1.456243
+ Total V=0       0.157236D+09          8.196551         18.873257
+ Vib (Bot)       0.155739D-08         -8.807603        -20.280254
+ Vib (V=0)       0.105048D+01          0.021387          0.049245
+ Electronic      0.100000D+01          0.000000          0.000000
+ Translational   0.165021D+07          6.217539         14.316414
+ Rotational      0.907037D+02          1.957625          4.507598
+ 
+                                                       Borane DF-BP86/def2-SVP
+                                                             IR Spectrum
+ 
+      2      2                                                                11                                                     
+      6      4                                                                11                                                     
+      2      7                                                                30                                                     
+      7      6                                                                68                                                     
+ 
+      X                                                                       XX                                                     
+      X                                                                       XX                                                     
+      X                                                                        X                                                     
+      X                                                                        X                                                     
+      X                                                                        X                                                     
+      X                                                                        X                                                     
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+      X                                                                                                                              
+ 
+ ***** Axes restored to original set *****
+ -------------------------------------------------------------------
+ Center     Atomic                   Forces (Hartrees/Bohr)
+ Number     Number              X              Y              Z
+ -------------------------------------------------------------------
+      1        5          -0.000000000    0.000000000    0.000000000
+      2        1           0.000000000   -0.000000232   -0.000000000
+      3        1           0.000000201    0.000000116    0.000000000
+      4        1          -0.000000201    0.000000116   -0.000000000
+ -------------------------------------------------------------------
+ Cartesian Forces:  Max     0.000000232 RMS     0.000000116
+ Force constants in Cartesian coordinates: 
+                1             2             3             4             5 
+      1  0.389252D+00
+      2  0.000000D+00  0.389255D+00
+      3  0.000000D+00  0.000000D+00  0.110248D+00
+      4 -0.353851D-01  0.000000D+00  0.000000D+00  0.293284D-01
+      5  0.000000D+00 -0.224118D+00  0.000000D+00  0.000000D+00  0.233119D+00
+      6  0.000000D+00  0.000000D+00 -0.367487D-01  0.000000D+00  0.000000D+00
+      7 -0.176934D+00 -0.817234D-01  0.000000D+00  0.302847D-02  0.214342D-02
+      8 -0.817233D-01 -0.825684D-01  0.000000D+00 -0.151842D-01 -0.450065D-02
+      9  0.000000D+00  0.000000D+00 -0.367492D-01  0.000000D+00  0.000000D+00
+     10 -0.176934D+00  0.817234D-01  0.000000D+00  0.302847D-02 -0.214342D-02
+     11  0.817233D-01 -0.825684D-01  0.000000D+00  0.151842D-01 -0.450065D-02
+     12  0.000000D+00  0.000000D+00 -0.367492D-01  0.000000D+00  0.000000D+00
+                6             7             8             9            10 
+      6  0.122482D-01
+      7  0.000000D+00  0.182171D+00
+      8  0.000000D+00  0.882438D-01  0.802759D-01
+      9  0.122503D-01  0.000000D+00  0.000000D+00  0.122482D-01
+     10  0.000000D+00 -0.826521D-02  0.866383D-02  0.000000D+00  0.182171D+00
+     11  0.000000D+00 -0.866383D-02  0.679303D-02  0.000000D+00 -0.882438D-01
+     12  0.122503D-01  0.000000D+00  0.000000D+00  0.122503D-01  0.000000D+00
+               11            12 
+     11  0.802759D-01
+     12  0.000000D+00  0.122482D-01
+ FormGI is forming the generalized inverse of G from B-inverse, IUseBI=4.
+ Force constants in internal coordinates: 
+                1             2             3             4             5 
+      1  0.233119D+00
+      2  0.394019D-03  0.233119D+00
+      3  0.394019D-03  0.394228D-03  0.233119D+00
+      4  0.380057D-02  0.380076D-02 -0.760132D-02  0.514645D-01
+      5  0.380057D-02 -0.760132D-02  0.380076D-02 -0.257322D-01  0.514645D-01
+      6 -0.760113D-02  0.380056D-02  0.380056D-02 -0.257323D-01 -0.257323D-01
+      7  0.000000D+00  0.000000D+00  0.000000D+00  0.000000D+00  0.000000D+00
+                6             7 
+      6  0.514647D-01
+      7  0.000000D+00  0.483648D-01
+ Leave Link  716 at Tue Jan 23 18:05:58 2018, MaxMem=   536870912 cpu:         0.0
+ (Enter /home/chemsoft/gaussian/g09e01/g09/l9999.exe)
+
+ This type of calculation cannot be archived.
+
+
+ The most important thing in communication is to hear what isn't being said.
+ -- Peter F. Drucker
+ Job cpu time:       0 days  0 hours  0 minutes  0.8 seconds.
+ File lengths (MBytes):  RWF=      5 Int=      0 D2E=      0 Chk=      1 Scr=      1
+ Normal termination of Gaussian 09 at Tue Jan 23 18:05:58 2018.

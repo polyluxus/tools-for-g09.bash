@@ -171,8 +171,21 @@ a NBO6 analysis, similar to g09.propwfx above.
 The newly created inputfile relies on a checkpointfile to read all data for the NBO6 analysis.
 Depending on the size of the molecule, a NBO analysis can take some time.
 
-Additional Input can be given to be processed via `-n` (NBO input stack), 
+Additional input can be given to be processed via `-n` (NBO input stack), 
 `-r` (Route section), and `-t` (tail of the file).
+
+### g09.freqwrite.sh
+
+This script takes a Gaussian inputfile and writes a new inputfile for a frequency run.
+The newly created inputfile relies on a checkpointfile to read all data.
+
+Additional options can be passed to the `freq` input stack via the `-o` switch. 
+Temperature and pressure can be specified via `-T <ARG>` or `-P <ARG>`, respectively.
+The writing of an input file to rerun a thermochemistry analysis,
+can be requested with the `-R` switch.
+
+Additional input can be given to be processed via `-r` (Route section), 
+and `-t` (tail of the file).
 
 ### examples (directory; used to be water.sample.tgz)
 
@@ -183,4 +196,4 @@ and testing. Mainly the files I have used to test the scripts.
 
 more tools in preparation (?)
 
-(Martin; 0.1.6; 2018-01-22)
+(Martin; 0.1.7; 2018-01-23.)

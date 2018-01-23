@@ -1,10 +1,11 @@
 #!/bin/bash
+how_called="$0 $@"
 
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
-version="0.1.7dev"
-versiondate="2018-01-XX"
+version="0.1.7"
+versiondate="2018-01-23"
 
 # A script to take an input file and write a new inputfile to 
 # perform a frequency calculation.
@@ -316,7 +317,7 @@ removeFreqKeyword ()
     local pattern
     pattern="[Ff][Rr][Ee][Qq]"
     removeAnyKeyword "$testRouteSection" "$pattern" || functionExitStatus=1
-    if (( functionExitStatus != 0 )) && [[ $onlyProperties == "false" ]] ; then
+    if (( functionExitStatus != 0 )) && [[ $rerunFreqAnalysis == "false" ]] ; then
       warning "It appears that you want to run a frequency calculation based on a frequency calculation."
     fi
     return $functionExitStatus
@@ -394,15 +395,32 @@ removeOutputKeyword ()
     return $functionExitStatus
 }
 
+testAndFormatTempKeyword ()
+{
+    local numericalPattern="[[:digit:]]+\.?[[:digit:]]*"
+    if [[ $1 =~ ^$numericalPattern$ ]] ; then
+      echo "Temperature=$1"
+    else
+      fatal "The value '$1' for the temperature is not numerical."
+    fi
+}
+
+testAndFormatPresKeyword ()
+{
+    local numericalPattern="[[:digit:]]+\.?[[:digit:]]*"
+    if [[ $1 =~ ^$numericalPattern$ ]] ; then
+      echo "Pressure=$1"
+    else
+      fatal "The value '$1' for the pressure is not numerical."
+    fi
+}
+
 addRunKeywords ()
 { 
     local newKeywords
-    if [[ $onlyProperties == "true" ]] ; then 
-      newKeywords="geom(check) guess(read,only)"
-    else
-      newKeywords="geom(check) guess(read)"
-    fi
-    newKeywords=$(collateKeywords "$newKeywords $addFrequencyKeyword $customRouteInput")
+    newKeywords="geom(check) guess(read)"
+    newKeywords="$newKeywords $addFrequencyKeyword $addTempKeyword $addPresKeyword $customRouteInput"
+    newKeywords=$(collateKeywords "$newKeywords")
     echo "$newKeywords"
 }
     
@@ -434,10 +452,10 @@ createNewInputFileData ()
       [[ ! -e $checkpointfile ]] && fatal "Cannot find '$checkpointfile'."
     fi
     # Check if new checkpointfile already exists
-    if [[ $onlyProperties == "true" ]] ; then 
-      newCheckpointfile=${checkpointfile%.chk}.prop.chk
+    if [[ $rerunFreqAnalysis == "true" ]] ; then 
+      newCheckpointfile=${checkpointfile%.chk}.$rerunSuffix.chk
     else
-      newCheckpointfile=${checkpointfile%.chk}.freq.chk
+      newCheckpointfile=${checkpointfile%.chk}.$calcSuffix.chk
     fi
     [[ -e $newCheckpointfile ]] && fatal "File '$newCheckpointfile' already exists. Rename or delete it."
 }   
@@ -447,7 +465,7 @@ printNewInputFile ()
 {
     echo "%oldchk=$checkpointfile"
     echo "%chk=$newCheckpointfile"
-    [[ $onlyProperties == "true" ]] && echo "%NoSave"
+    [[ $rerunFreqAnalysis == "true" ]] && echo "%NoSave"
     fold -w80 -c -s <<< "$newRouteSection"
     echo ""
     fold -w80 -c -s <<< "$titleSection"
@@ -458,6 +476,8 @@ printNewInputFile ()
       echo "$customTail"
       echo ""
     fi
+    echo "! Input file created with: "
+    echo "!   $how_called"
 }
 
 #
@@ -466,17 +486,14 @@ printNewInputFile ()
 
 (( $# == 0 )) && helpme
 
-onlyProperties="false"
+rerunFreqAnalysis="false"
+declare calcSuffix rerunSuffix
+
 # Evaluate options 
 #
 #hlp OPTIONS: 
-while getopts :o:pr:t:hu options ; do
+while getopts :o:RT:P:r:t:hu options ; do
     case $options in
-
-      #%#     #hlp   -n <ARG>   Adds custom command <ARG> to the nbo6 input stack.
-      #%#     #hlp              May be specified multiple times.
-      #%#     #hlp 
-      #%#  n) customNBO6Input="$customNBO6Input $OPTARG" ;;
 
            #hlp   -o <ARG>   Adds options <ARG> to the frequency keyword.
            #hlp              May be specified multiple times.
@@ -490,36 +507,43 @@ while getopts :o:pr:t:hu options ; do
            fi
            ;;
 
-           #hlp   -p         Writes a property run to redo a frequency calculation.
-           #hlp              Adds option 'ReadFC' to the option list and
-           #hlp              specifies 'GUESS(read,only).
-           #hlp              Should be specified with a change in temperature or pressure
-           #hlp              via the '-r <ARG>' switch.
+           #hlp   -R         Writes a property run input file to redo a frequency calculation.
+           #hlp              Adds option 'ReadFC' to the frequency option list.
+           #hlp              Should be specified with a temperature or pressure
+           #hlp              via the '-T <ARG>' or '-P <ARG>' switches.
+           #hlp              No check is performed whether the supplied input file is a
+           #hlp              frequency calculation.
            #hlp
-        p) onlyProperties="true" 
+        R) rerunFreqAnalysis="true" 
            if [[ -z $addFrequencyOptions ]] ; then
              addFrequencyOptions="ReadFC"
            else
              addFrequencyOptions="ReadFC, $addFrequencyOptions"
            fi
-           warning "If not based on a frequency calculation, this will not produce new data."
+           warning "If not based on a frequency calculation, this will produce an error."
            ;;
 
-           #hlp   -T <ARG>   Specify temperature (work in progress, n.a.)
+           #hlp   -T <ARG>   Specify temperature in kelvin.
+           #hlp              Writes 'Temperature=<ARG>' to the route section. 
+           #hlp              If specified multiple times, only the last one has an effect.
+           #hlp              It will, however, mess with the filename.
            #hlp 
-        T) specifiedTemperature="$OPTARG"
+        T) addTempKeyword=$(testAndFormatTempKeyword "$OPTARG") || exit $?
+           calcSuffix="T${OPTARG//\./-}${calcSuffix}"
            ;;
 
-           #hlp   -P <ARG>   Specify pressure (work in progress, n.a.)
+           #hlp   -P <ARG>   Specify pressure in atmosphere.
+           #hlp              Writes 'Pressure=<ARG>' to the route section. 
+           #hlp              If specified multiple times, only the last one has an effect.
+           #hlp              It will, however, mess with the filename.
            #hlp 
-        P) specifiedPressure="$OPTARG"
+        P) addPresKeyword=$(testAndFormatPresKeyword "$OPTARG") || exit $?
+           calcSuffix="${calcSuffix}P${OPTARG//\./-}"
            ;;
 
            #hlp   -r <ARG>   Adds custom command <ARG> to the route section.
            #hlp              May be specified multiple times.
            #hlp              The stack will be collated, but no sanity check will be performed.
-           #hlp              Example: Temperature=400 (in kelvin)
-           #hlp                       Pressure=1.5    (in atmosphere)
            #hlp 
         r) customRouteInput="$customRouteInput $OPTARG" ;;
 
@@ -528,7 +552,7 @@ while getopts :o:pr:t:hu options ; do
            #hlp 
         t) customTail="$OPTARG" ;;
 
-           #hlp   -h         Prints this short help message
+           #hlp   -h         Prints this help message.
            #hlp 
         h) helpme ;;
         u) helpme ;;
@@ -540,18 +564,24 @@ while getopts :o:pr:t:hu options ; do
 done
 shift $((OPTIND-1))
 
+if [[ $rerunFreqAnalysis == "true" ]] ; then
+  rerunSuffix="rep$calcSuffix"
+else
+  calcSuffix="freq.$calcSuffix"
+fi
+
 [[ -z $1 ]] && fatal "No filename specified."
 inputFilename="$1"
 [[ ! -e "$inputFilename" ]] && fatal "Cannot access '$inputFilename'."
 [[ ! -r "$inputFilename" ]] && fatal "Cannot access '$inputFilename'."
 
 shift
-(( $# > 0 )) && warning "Additional input will be ignored."
+(( $# > 0 )) && warning "Additional input ($@) will be ignored."
 
-if [[ $onlyProperties == "true" ]] ; then 
-  outputFilename="${inputFilename%.*}.prop.com"
+if [[ $rerunFreqAnalysis == "true" ]] ; then 
+  outputFilename="${inputFilename%.freq.*}.freq.$rerunSuffix.com"
 else
-  outputFilename="${inputFilename%.*}.freq.com"
+  outputFilename="${inputFilename%.*}.$calcSuffix.com"
 fi
 [[   -e "$outputFilename" ]] && fatal "File '$outputFilename' exists. Rename or delete it."
 
