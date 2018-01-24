@@ -4,8 +4,8 @@ how_called="$0 $@"
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
-version="0.1.7"
-versiondate="2018-01-23"
+version="0.1.8"
+versiondate="2018-01-24"
 
 # A script to take an input file and write a new inputfile to 
 # perform a frequency calculation.
@@ -13,8 +13,6 @@ versiondate="2018-01-23"
 
 #hlp This script takes a Gaussian inputfile and writes a new inputfile for a frequency run.
 #hlp The newly created inputfile relies on a checkpointfile to read all data.
-#hlp Usage: $scriptname [options] filename
-#hlp
 
 #
 # Print logging information and warnings nicely.
@@ -55,8 +53,6 @@ helpme ()
     while read -r line; do
       [[ $line =~ $pattern ]] && eval "echo \"${BASH_REMATCH[1]}\""
     done < <(grep "#hlp" "$0")
-    #echo "Version: $version ($versiondate)"
-    #echo "Usage: $scriptname [options] filename"
     exit 0
 }
 
@@ -177,8 +173,6 @@ collateKeywordOptions ()
     done
     echo "$keepstring"
 }
-
-
 
 collateKeywords ()
 {
@@ -491,7 +485,9 @@ declare calcSuffix rerunSuffix
 
 # Evaluate options 
 #
-#hlp OPTIONS: 
+#hlp Usage: $scriptname [options] filename
+#hlp
+#hlp Options:
 while getopts :o:RT:P:r:t:hu options ; do
     case $options in
 
