@@ -1,16 +1,18 @@
 #!/bin/bash
+how_called="$0 $@"
 
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
-version="0.1.5"
-versiondate="2018-01-20"
+version="0.1.8"
+versiondate="2018-01-24"
 
 # A script to take an input file and write a new inputfile to 
 # obtain a wfx file.
 # To Do: import (formatted) checkpoint files
 
 #hlp This script takes a Gaussian inputfile and writes a new inputfile for a property run.
+#hlp The newly created inputfile relies on a checkpointfile to read all data.
 
 #
 # Print logging information and warnings nicely.
@@ -29,12 +31,13 @@ message ()
 
 warning ()
 {
-    echo "WARNING: " "$@"
+    echo "WARNING: " "$@" >&2
+    return 1
 }
 
 fatal ()
 {
-    echo "ERROR  : " "$@"
+    echo "ERROR  : " "$@" >&2
     exit 1
 }
 
@@ -45,9 +48,6 @@ fatal ()
 
 helpme ()
 {
-    # message "This script takes a Gaussian inputfile and writes a new inputfile for a property run."
-    # message "There are no options yet. (Work in progress, I guess.)"
-    # message "Version: $version ($versiondate)"
     local line
     local pattern="^[[:space:]]*#hlp[[:space:]](.*$)"
     while read -r line; do
@@ -120,6 +120,39 @@ parseInputfile ()
     done < "$1"
 }
 
+collateKeywordOptions ()
+{
+    # The function takes an inputstring and removes any unnecessary spaces
+    # needed for collateKeywords
+    local inputstring="$1"
+    # The collated section will be saved to
+    local keepstring transformstring
+    # Any combination of spaces, equals signs, and opening parentheses
+    # can and need to be removed
+    local removeFront="[[:space:]]*[=]?[[:space:]]*[\(]?"
+    # Any trailing closing parentheses and spaces need to be cut
+    local removeEnd="[\)]?[[:space:]]*"
+    [[ $inputstring =~ $removeFront([^\)]+)$removeEnd ]] && inputstring="${BASH_REMATCH[1]}"
+    
+    # Spaces, tabs, or commas can be used in any combination
+    # to separate items within the options.
+    # Does massacre IOPs.
+    local pattern="[^[:space:],]+([[:space:]]*=[[:space:]]*[^[:space:],]+)?([[:space:],]+|$)"
+    while [[ $inputstring =~ $pattern ]] ; do
+      transformstring="${BASH_REMATCH[0]}"
+      inputstring="${inputstring//${BASH_REMATCH[0]}/}"
+      # remove stuff
+      transformstring="${transformstring// /}"
+      transformstring="${transformstring//,/}"
+      if [[ -z $keepstring ]] ; then
+        keepstring="$transformstring"
+      else
+        keepstring="$keepstring,$transformstring"
+      fi
+    done
+    echo "$keepstring"
+}
+
 collateKeywords ()
 {
     # This function removes spaces which have been entered in the original input
@@ -150,27 +183,66 @@ collateKeywords ()
     # see http://gaussian.com/input/?tabid=1
     # The ouptput of this function should only use the keywords without any options, or
     # the following format: keyword=(option1,option2,…) [no spaces]
-    local keywordpattern="[^[:space:],/=]+"
-    local keywordoptions="[[:space:]]*=[[:space:]]*[^[:space:],/\(\)]+|[[:space:]]*[=]?[[:space:]]*\([^\)]+\)"
-    local keywordterminate="[[:space:],/]+|$"
-    local testpattern="($keywordpattern)($keywordoptions)?($keywordterminate)"
+    # Exeptions to the above: temperature=500 and pressure=2, 
+    # where the equals is the only accepted form.
+    # This is probably because they can also be options to 'freq'.
+    local keywordPattern="[^[:space:],/\(=]+"
+    local optionPatternEquals="[[:space:]]*=[[:space:]]*[^[:space:],/\(\)]+"
+    local optionPatternParens="[[:space:]]*[=]?[[:space:]]*\([^\)]+\)"
+    local keywordOptions="$optionPatternEquals|$optionPatternParens"
+    local keywordTerminate="[[:space:],/]+|$"
+    local testPattern="($keywordPattern)($keywordOptions)?($keywordTerminate)"
     local keepKeyword keepOptions
-    while [[ $inputstring =~ $testpattern ]] ; do
+    local numericalPattern="[[:digit:]]+\.?[[:digit:]]*"
+    while [[ $inputstring =~ $testPattern ]] ; do
       # Unify input pattern and remove unnecessary spaces
+      # Remove found portion from inputstring:
       inputstring="${inputstring//${BASH_REMATCH[0]}/}"
+      # Keep keword, options, and how it was terminated
       keepKeyword="${BASH_REMATCH[1]}"
       keepOptions="${BASH_REMATCH[2]}"
       keepTerminate="${BASH_REMATCH[3]}"
-      if [[ $keepOptions =~ ^[[:space:]]*[=]?[[:space:]]*[\(]?([^\)]+)[\)]?[[:space:]]*$ ]] ; then
-        keepOptions="${BASH_REMATCH[1]}"
-        keepKeyword="$keepKeyword(${keepOptions// /})"
+
+      # Remove spaces from IOPs (only evil people use them there)
+      if [[ $keepKeyword =~ ^[Ii][Oo][Pp]$ ]] ; then
+        keepKeyword="$keepKeyword$keepOptions"
+        keepKeyword="${keepKeyword// /}"
+        unset keepOptions # unset to not run into next 'if'
+      fi
+
+      if [[ ! -z $keepOptions ]] ; then 
+        # remove spaces, equals, parens from front and end
+        # substitute option separating spaces with commas
+        keepOptions=$(collateKeywordOptions "$keepOptions")
+
+        # Check for the exceptions to the desired format
+        if [[ $keepKeyword =~ ^[Tt][Ee][Mm][Pp].*$ ]] ; then
+          if [[ ! $keepOptions =~ ^$numericalPattern$ ]] ; then
+            warning "Unrecognised format for temperature: $keepOptions."
+            returncode=1
+          fi
+          keepKeyword="$keepKeyword=$keepOptions"
+        elif [[ $keepKeyword =~ ^[Pp][Rr][Ee].*$ ]] ; then
+          if [[ ! $keepOptions =~ ^$numericalPattern$ ]] ; then
+            warning "Unrecognised format for temperature: $keepOptions."
+            returncode=1
+          fi
+          keepKeyword="$keepKeyword=$keepOptions"
+        else
+          keepKeyword="$keepKeyword($keepOptions)"
+        fi
       fi
       if [[ $keepTerminate =~ / ]] ; then
         keepKeyword="$keepKeyword/"
       fi
-      (( ${#keepKeyword} > 80 )) && returncode=1
+      if (( ${#keepKeyword} > 80 )) ; then
+        returncode=1
+        warning "Found extremely long keyword, heck input before running the calculation."
+      fi
       if [[ $keepstring =~ /$ ]] ; then
         keepstring="$keepstring$keepKeyword"
+      elif [[ -z $keepstring ]] ; then
+        keepstring="$keepKeyword"
       else
         keepstring="$keepstring $keepKeyword"
       fi
@@ -259,8 +331,10 @@ removeOutputKeyword ()
 
 addRunKeywords ()
 { 
-    local newKeywords="geom(allcheck) guess(read,only) output=$wavefunctionType"
-    newRouteSection="$1 $newKeywords"
+    local newKeywords
+    newKeywords="geom(allcheck) guess(read,only) output=$wavefunctionType"
+    newKeywords=$(collateKeywords "$newKeywords")
+    echo "$newKeywords"
 }
     
 createNewInputFileData ()
@@ -269,8 +343,7 @@ createNewInputFileData ()
 
     # If there were any long keywords, then return value is not 0.
     # A warning must be issued
-    newRouteSection=$(collateKeywords "$routeSection" || return 1)
-    (( $? > 0 )) && warning "Found extremely long keyword. Check generated input before submitting the calculation."
+    newRouteSection=$(collateKeywords "$routeSection")
     
     while ! removeOptKeyword    "$newRouteSection" ; do : ; done
     while ! removeFreqKeyword   "$newRouteSection" ; do : ; done
@@ -279,7 +352,7 @@ createNewInputFileData ()
     while ! removePopKeyword    "$newRouteSection" ; do : ; done
     while ! removeOutputKeyword "$newRouteSection" ; do : ; done
 
-    addRunKeywords "$newRouteSection"
+    newRouteSection="$newRouteSection $(addRunKeywords)"
     
     # If the checkpoint file was not specified in the input file, guess it
     if [[ -z $checkpointfile ]] ; then
@@ -292,17 +365,23 @@ createNewInputFileData ()
     wavefunctionfile="${checkpointfile%.chk}.$wavefunctionType"
     # Check if wavefunctionfile already exists
     [[ -e $wavefunctionfile ]] && fatal "File '$wavefunctionfile' already exists. Rename or delete it."
+    # Check if there could be a checkpointfile interfering 
+    tempCheckpointfile="${checkpointfile%.chk}.prop.chk"
+    [[ -e $tempCheckpointfile ]] && fatal "File '$tempCheckpointfile' already exists. Rename or delete it."
 }   
 
 # Print the input file in a more readable form
 printNewInputFile ()
 {
     echo "%oldchk=$checkpointfile"
+    echo "%chk=$tempCheckpointfile"
     echo "%NoSave"
     fold -w80 -c -s <<< "$newRouteSection"
     echo ""
     echo "$wavefunctionfile"
     echo ""
+    echo "! Input file created with: "
+    echo "!   $how_called"
 }
 
 #
