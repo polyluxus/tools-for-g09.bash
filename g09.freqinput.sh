@@ -1,11 +1,11 @@
 #!/bin/bash
-how_called="$0 $@"
+how_called="$0 $*"
 
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
-version="0.1.8"
-versiondate="2018-01-24"
+version="0.1.9"
+versiondate="2018-02-15"
 
 # A script to take an input file and write a new inputfile to 
 # perform a frequency calculation.
@@ -363,6 +363,15 @@ removeGeomKeyword ()
     removeAnyKeyword "$testRouteSection" "$pattern" || return 1
 }
 
+removeGenKeyword ()
+{
+    # Assigns the gen keyword to the pattern
+    local testRouteSection="$1"
+    local pattern
+    pattern="[Gg][Ee][Nn]"
+    removeAnyKeyword "$testRouteSection" "$pattern" || return 1
+}
+
 removePopKeyword ()
 {
     local testRouteSection="$1"
@@ -387,6 +396,79 @@ removeOutputKeyword ()
       warning "Presence opt the 'OUTPUT' keyword might indicate that the calculation is not suited for a frequency calculation."
     fi
     return $functionExitStatus
+}
+
+warnAnyKeyword ()
+{
+    # Takes in a string (the route section) and 
+    local testLine="$1"
+    # tests for a pattern (keyword) 
+    local testPattern="$2"
+    # and if present issues a warning.
+    # Since spaces have been removed form within the keywords previously with collateKeywords, 
+    # and inter-keyword delimiters are set to spaces only also, 
+    # it is safe to use that as a criterion to find keywords.
+    # The test pattern is extended to catch the whole keyword including options.
+    local extendedPattern="($testPattern[^[:space:]]*)([[:space:]]+|$)"
+    if [[ $testLine =~ $extendedPattern ]] ; then
+      #echo "-->|${BASH_REMATCH[0]}|<--" #(Debug Pattern:)
+      local foundPattern=${BASH_REMATCH[1]}
+      warning "Found keyword '$foundPattern'."
+      return 1
+    fi
+}
+
+warnDenfitKeyword ()
+{
+    # Assigns the gen keyword to the pattern, extends to GenECP, too
+    # (used to specify own basis set)
+    local testRouteSection="$1"
+    local pattern
+    pattern="[Dd][Ee][Nn][Ff][Ii][Tt]"
+    warnAnyKeyword "$testRouteSection" "$pattern" || return 1
+}
+
+warnGenKeyword ()
+{
+    # Assigns the gen keyword to the pattern, extends to GenECP, too
+    # (used to specify own basis set)
+    local testRouteSection="$1"
+    local pattern
+    pattern="[Gg][Ee][Nn]"
+    warnAnyKeyword "$testRouteSection" "$pattern" || return 1
+}
+
+warnAndSubAnyKeyword ()
+{
+    # Takes in a string (the route section)
+    local testLine="$1"
+    # and tests for a pattern (keyword) 
+    local testPattern="$2"
+    # and if present issues a warning
+    # and subsititutes with alternative pattern.
+    local subPattern="$3"
+    # Since spaces have been removed form within the keywords previously with collateKeywords, 
+    # and inter-keyword delimiters are set to spaces only also, 
+    # it is safe to use that as a criterion to find keywords.
+    # The test pattern is extended to catch the whole keyword including options.
+    local extendedPattern="($testPattern[^[:space:]]*)([[:space:]]+|$)"
+    if [[ $testLine =~ $extendedPattern ]] ; then
+      #echo "-->|${BASH_REMATCH[0]}|<--" #(Debug Pattern:)
+      local foundPattern=${BASH_REMATCH[1]}
+      warning "Substitute keyword '$foundPattern' with '$subPattern'."
+      newRouteSection="${testLine/$foundPattern/$subPattern}"
+      return 1
+    fi
+}
+
+warnAndSubGenKeyword ()
+{
+    # Assigns the gen keyword to the pattern, extends to GenECP, too
+    # (used to specify own basis set)
+    local testRouteSection="$1"
+    local pattern
+    pattern="[Gg][Ee][Nn]"
+    warnAndSubAnyKeyword "$testRouteSection" "$pattern" "ChkBasis" || return 1
 }
 
 testAndFormatTempKeyword ()
@@ -436,6 +518,15 @@ createNewInputFileData ()
     while ! removeOutputKeyword "$newRouteSection" ; do : ; done
 
     newRouteSection="$newRouteSection $(addRunKeywords)"
+
+    if ! warnAndSubGenKeyword "$newRouteSection" ; then
+      warning "Additional basis set specifications have not been read,"
+      warning "but will be retrieved from the checkpointfile."
+      while ! removeGenKeyword "$newRouteSection" ; do : ; done
+      if ! warnDenfitKeyword "$newRouteSection" ; then
+        warning "Please check density fitting settings are compatible with 'ChkBasis'."
+      fi
+    fi
     
     # If the checkpoint file was not specified in the input file, guess it
     if [[ -z $checkpointfile ]] ; then
@@ -562,6 +653,8 @@ shift $((OPTIND-1))
 
 if [[ $rerunFreqAnalysis == "true" ]] ; then
   rerunSuffix="rep$calcSuffix"
+elif [[ -z $calcSuffix ]] ; then 
+  calcSuffix="freq"
 else
   calcSuffix="freq.$calcSuffix"
 fi
@@ -572,7 +665,7 @@ inputFilename="$1"
 [[ ! -r "$inputFilename" ]] && fatal "Cannot access '$inputFilename'."
 
 shift
-(( $# > 0 )) && warning "Additional input ($@) will be ignored."
+(( $# > 0 )) && warning "Additional input ($*) will be ignored."
 
 if [[ $rerunFreqAnalysis == "true" ]] ; then 
   outputFilename="${inputFilename%.freq.*}.freq.$rerunSuffix.com"

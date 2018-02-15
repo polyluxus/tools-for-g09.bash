@@ -4,8 +4,8 @@ how_called="$0 $@"
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
-version="0.1.8"
-versiondate="2018-01-24"
+version="0.1.9"
+versiondate="2018-02-15"
 
 # A script to take an input file and write a new inputfile to 
 # obtain a wfx file.

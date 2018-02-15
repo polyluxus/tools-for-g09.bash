@@ -25,8 +25,8 @@ nbo06bininstallpath="/home/chemsoft/nbo6/nbo6-2016-01-16/bin"
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
  
-version="0.1.6"
-versiondate="2018-01-22"
+version="0.1.9"
+versiondate="2018-02-15"
 
 #
 # Avoid conflicts if another Gaussian version is already sourced

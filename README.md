@@ -196,4 +196,4 @@ and testing. Mainly the files I have used to test the scripts.
 
 more tools in preparation (?)
 
-(Martin; 0.1.8; 2018-01-24.)
+(Martin; 0.1.9; 2018-02-15.)

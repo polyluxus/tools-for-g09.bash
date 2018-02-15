@@ -7,8 +7,8 @@
 # See also http://codereview.stackexchange.com/q/131666/92423
 # 
 # This was last updated with 
-version="0.1.5"
-versiondate="2018-01-20"
+version="0.1.9"
+versiondate="2018-02-15"
 # of tools-for-g09.bash
 
 scriptname=${0##*\/} # Remove trailing path
