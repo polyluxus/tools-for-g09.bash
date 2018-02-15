@@ -4,8 +4,8 @@ how_called="$0 $@"
 scriptname=${0##*\/} # Remove trailing path
 scriptname=${scriptname%.sh} # remove scripting ending (if present)
 
-version="0.1.8"
-versiondate="2018-01-24"
+version="0.1.9"
+versiondate="2018-02-15"
 
 # A script to take an input file and write a new inputfile to 
 # perform a (non-standard) nbo6 analysis.
@@ -386,10 +386,10 @@ createNewInputFileData ()
       #  after all the calculation might not be completed yet.)
       [[ ! -e $checkpointfile ]] && fatal "Cannot find '$checkpointfile'."
     fi
-    nbo6basefilename="${checkpointfile%.chk}"
+    nbo6basefilename="${checkpointfile%.chk}.nbo6"
     # Check if nbo archive file already exists
     [[ -e $nbo6basefilename.47 ]] && fatal "File '$nbo6basefilename.47' already exists. Rename or delete it."
-    tempCheckpointfile="$nbo6basefilename.nbo6.chk"
+    tempCheckpointfile="$nbo6basefilename.chk"
     [[ -e $tempCheckpointfile ]] && fatal "File '$tempCheckpointfile' already exists. Rename or delete it."
 }   
 

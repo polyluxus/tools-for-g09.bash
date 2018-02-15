@@ -7,8 +7,8 @@
 #hlp Distributed with tools-for-g09.bash $version ($versiondate)
 # 
 # This was last updated with 
-version="0.1.5"
-versiondate="2018-01-19"
+version="0.1.9"
+versiondate="2018-02-15"
 # of tools-for-g09.bash
 
 scriptname=${0##*\/} # Remove trailing path
@@ -175,6 +175,7 @@ format_all ()
     local input_chk returncode=0
     message "Working on all checkpoint files in ${PWD#\/*\/*\/}." 
     for input_chk in *.chk; do
+      [[ "$input_chk" == "*.chk" ]] && fatal "There are no checkpointfiles in this directory."
       format_only "$input_chk" || (( returncode+=$? ))
     done
     return $returncode
