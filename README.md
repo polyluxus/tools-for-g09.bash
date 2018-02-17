@@ -148,6 +148,14 @@ environment. See the Gaussian manual for more information.
 Loads the environment settings and then opens a bash subshell.
 You can pretty much run any command with that. 
 
+```
+  g09.wrapper ( -V | gv | view ) [parameters]
+```
+Loads the environment settings and opens GaussView 5.
+Any parameters are optional and will be passed on,
+see the manual for more information.
+(Must be enebled in the configuration.)
+
 To Do:
  - Implement option to set `GAUSS_MEMDEF` for the utilities. Currently 
  if memory is scarce you need to use raw or bash mode.

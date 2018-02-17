@@ -334,15 +334,18 @@ load_bash ()
 
 load_gaussview ()
 {
+  local gaussviewbin="$gaussian16installpath/gv/gview"
   if [[ ! $gaussview == "enabled" ]] ; then
     warning "GaussView is disabled through the configuration of this script."
     joberror=1
-  else
+  elif [[ -f "$gaussviewbin" && -x "$gaussviewbin" ]] ; then
     message "This interface loads the Gaussian environment variables,"
     message "and opens GaussView 5."
-    set_g09_variables
-    "$gaussian09installpath/gv/gview" "$@"
+    set_g16_variables
+    "$gaussviewbin" "$@"
     joberror=$?
+  else
+    fatal "GaussView does not exist in '$gaussviewbin'."
   fi
 }
 
