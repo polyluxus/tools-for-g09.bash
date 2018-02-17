@@ -156,10 +156,6 @@ Any parameters are optional and will be passed on,
 see the manual for more information.
 (Must be enebled in the configuration.)
 
-To Do:
- - Implement option to set `GAUSS_MEMDEF` for the utilities. Currently 
- if memory is scarce you need to use raw or bash mode.
-
 ### g09.propwfx.sh (used to be g09.genwfx.sh)
 
 This script reads an inputfile and produces a new inputfile to perform a property run.
