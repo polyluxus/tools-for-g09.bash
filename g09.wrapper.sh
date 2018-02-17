@@ -17,6 +17,12 @@ gaussian09basescratch="/scr/$USER"
 # You can use NBO6 in conjunction with Gaussian if you bought it.
 # Leave the following empty, if not available.
 nbo06bininstallpath="/home/chemsoft/nbo6/nbo6-2016-01-16/bin"
+# Do you want to use Gaussview with this script?
+# Make sure you have it installed in 
+#   $gaussian09installpath/gv/gview
+#   for example: /home/chemsoft/gaussian/g09e01/gv/gview (executable)
+gaussview="enabled"
+# gausview="disabled" # If you can't or won't use it
 #
 # END CONFIGURATION
 ###
@@ -124,7 +130,7 @@ make_scratch ()
 
 set_g09_variables ()
 {
-  message "Initialising Gaussian 09."
+  message "Initialising $gaussian09installname."
   g09root="$gaussian09installpath"
   message "Using G09: $g09root"
   if [[ -z $gaussian09subscratch ]] ; then
@@ -326,6 +332,23 @@ load_bash ()
   joberror=$?
 }
 
+load_gaussview ()
+{
+  local gaussviewbin="$gaussian16installpath/gv/gview"
+  if [[ ! $gaussview == "enabled" ]] ; then
+    warning "GaussView is disabled through the configuration of this script."
+    joberror=1
+  elif [[ -f "$gaussviewbin" && -x "$gaussviewbin" ]] ; then
+    message "This interface loads the Gaussian environment variables,"
+    message "and opens GaussView 5."
+    set_g16_variables
+    "$gaussviewbin" "$@"
+    joberror=$?
+  else
+    fatal "GaussView does not exist in '$gaussviewbin'."
+  fi
+}
+
 #
 # Print some helping commands
 # The lines are distributed throughout the script and grepped for
@@ -355,6 +378,9 @@ execute_commandline ()
           "raw") shift; use_bare_wrapper "$@" ;;
       
          "bash") shift; load_bash "$@" ;;
+
+           "gv" | "view") 
+                 shift; load_gaussview "$@" ;;
       
               *) calculation "$@" ;;
     esac
@@ -374,7 +400,7 @@ evaluate_options ()
     # Initialise options
     local OPTIND="1"
     
-    while getopts :fucrbm:p:h options ; do
+    while getopts :fucrbVm:p:h options ; do
       #hlp Usages and options:
       #hlp $scriptname [scriptoptions] commands (see below)
       #hlp
@@ -432,6 +458,14 @@ evaluate_options ()
         #hlp   You can pretty much run any command with that. 
         #hlp
         b) set_longoption "bash" ;;
+
+        #hlp Load GaussView:
+        #hlp   $scriptname ( -V | gv | view ) [parameters]
+        #hlp   Any parameters are optional and will be passed on to GaussView,
+        #hlp   see the manual for more information.
+        #hlp   (Must be enebled in the configuration.)
+        #hlp
+        V) set_longoption "gv" ;;
 
         #hlp Scriptoptions:
         #hlp   -m <ARG>  Set memory variables GAUSS_MEMDEF and GAUSS_MDEF.
