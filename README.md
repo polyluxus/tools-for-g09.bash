@@ -1,3 +1,10 @@
+**Notice:**
+
+This repository is no longer maintained and thus its status is *'deprecated'*.
+
+For Gaussian 16 there is a still actively developed version of similar scope:
+[tools-for-g16.bash](https://github.com/polyluxus/tools-for-g16.bash)
+
 # tools-for-g09.bash
 
 Various bash scripts to aid the use of the quantum chemistry software 
@@ -198,6 +205,8 @@ and testing. Mainly the files I have used to test the scripts.
 
 ---
 
-more tools in preparation (?)
+~~more tools in preparation (?)~~ 
 
-(Martin; 0.1.9; 2018-02-15.)
+This repository is no longer maintained, it is as it is now. There will no longer be any improvements, or new features.
+
+(Martin; 0.1.10; 2019-05-01.)

@@ -1,4 +1,16 @@
 #!/bin/bash
+
+#####################################################################
+#                                                                   #
+# Warning: This repository is no longer maintained as Gaussian 09   #
+#          is also becoming obsolete, or deprecated.                #
+# Info:    The sucessor repository for Gaussian 16 can be found at  #
+#          https://github.com/polyluxus/tools-for-g16.bash          #
+#                                                                   #
+#                                                Martin, 2019-05-01 #
+#                                                                   #
+#####################################################################
+
 #hlp This tool creates a summary for a single (or more) frequency calculation(s)
 #hlp of the quantum chemical software suite Gaussian09.
 #hlp It will, however, not fail if it is not one. 

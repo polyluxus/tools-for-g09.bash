@@ -1,5 +1,17 @@
 #!/bin/bash
 
+#####################################################################
+#                                                                   #
+# Warning: This repository is no longer maintained as Gaussian 09   #
+#          is also becoming obsolete, or deprecated.                #
+# Info:    The sucessor repository for Gaussian 16 can be found at  #
+#          https://github.com/polyluxus/tools-for-g16.bash          #
+#                                                                   #
+#                                                Martin, 2019-05-01 #
+#                                                                   #
+#####################################################################
+
+
 #hlp $scriptname finds energy statements from Gaussian 09 calculations,
 #hlp or find energy statements from all G09 log files in working directory.
 #hlp 
