@@ -1,1 +1,0 @@
-g09.propwfx.sh
