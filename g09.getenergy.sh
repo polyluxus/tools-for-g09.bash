@@ -11,8 +11,8 @@ scriptname=${scriptname%.sh} # remove scripting ending (if present)
 # Thanks to janos and 200_success
 # 
 # This was last updated with 
-version="0.1.9"
-versiondate="2018-02-15"
+version="0.1.10"
+versiondate="2019-05-01"
 # of tools-for-g09.bash
 
 #
@@ -81,6 +81,7 @@ getAll ()
     # Print a header
     printf "%-25s %-15s   %20s ( %6s )\n" "Command file" "Functional" "Energy / Hartree" "cycles"
     for commandOrLogfile in *com; do
+        [[ "$commandOrLogfile" == '*com' ]] && fatal "No command files found."
         getOnly "$commandOrLogfile"
     done
 }
